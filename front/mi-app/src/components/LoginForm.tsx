@@ -1,18 +1,19 @@
 import { useAuth } from "../context/useAuth";
 
 export default function LoginForm() {
-  const { setUser } = useAuth();
-
+  const { user, setUser } = useAuth();
+  console.log("Usuario antes de setUser:", user);
   const handleLogin = () => {
-    // Simulate a login
-    const user = { id: "1", name: "John Doe" };
-    setUser(user);
+    const fakeUser = { id: "1", name: "John Doe" };
+    setUser(fakeUser);
   };
 
   return (
-    <div>
-      <h2>Login Form</h2>
-      <button onClick={handleLogin}>Login</button>
-    </div>
+    <button
+      className="bg-blue-600 text-white p-2 rounded"
+      onClick={handleLogin}
+    >
+      Iniciar sesión
+    </button>
   );
 }
