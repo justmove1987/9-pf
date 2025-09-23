@@ -3,6 +3,7 @@ import { useAuth } from "./context/useAuth";
 import Home from "./pages/Home";
 import Projects from "./pages/Projects";
 import Admin from "./pages/Admin";
+import Dashboard from "./pages/Dashboard";  // ✅ nuevo import
 import LoginForm from "./components/LoginForm";
 
 type PrivateProps = { children: React.ReactNode };
@@ -19,11 +20,21 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/login" element={<LoginForm />} />
+
+        {/* 🔒 Rutas protegidas */}
         <Route
           path="/admin"
           element={
             <PrivateRoute>
               <Admin />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />   {/* ✅ nueva página para gestión de proyectos */}
             </PrivateRoute>
           }
         />
