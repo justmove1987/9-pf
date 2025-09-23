@@ -1,24 +1,12 @@
-import { createContext, useState, type ReactNode } from "react";
+import { createContext, useContext } from "react";
+import type { AuthContextProps } from "./AuthProvider";
 
-type User = {
-  // Define your user type here
-  id: string;
-  name: string;
-};
+/** Contexto de autenticación puro, sin JSX */
+export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-type AuthContextType = {
-  user: User | null;
-  setUser: (user: User | null) => void;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+/** Hook para consumir el contexto en cualquier componente */
+export const useAuth = (): AuthContextProps => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth debe usarse dentro de AuthProvider");
+  return ctx;
 };

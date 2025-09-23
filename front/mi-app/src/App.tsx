@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
+import { useAuth } from "./context/useAuth";
 import Home from "./pages/Home";
 import Projects from "./pages/Projects";
 import Admin from "./pages/Admin";

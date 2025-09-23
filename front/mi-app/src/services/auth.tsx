@@ -1,20 +1,21 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useState } from "react";
 import type { ReactNode } from "react";
+import type { JSX } from "react";
 
 interface User { email: string; role?: "admin" | "user"; }
 interface AuthContextProps {
   user: User | null;
-  login: (email:string,password:string)=>Promise<void>;
+  login: (email: string) => Promise<void>;
   logout: ()=>void;
 }
 
 const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
-export const useAuth = () => useContext(AuthContext);
+// Remove useAuth export from this file
 
 export const AuthProvider = ({children}:{children:ReactNode}): JSX.Element => {
   const [user, setUser] = useState<User|null>(null);
 
-  const login = async (email:string,password:string) => {
+  const login = async (email: string) => {
     // Aquí iría llamada a Firebase o a tu API
     setUser({ email, role:"user" });
   };
