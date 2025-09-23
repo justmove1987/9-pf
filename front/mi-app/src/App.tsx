@@ -5,6 +5,7 @@ import Projects from "./pages/Projects";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";  // ✅ nuevo import
 import LoginForm from "./components/LoginForm";
+import Register from "./pages/Register";
 
 type PrivateProps = { children: React.ReactNode; requiredRole?: string };
 
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<Register />} />
 
         {/* 🔒 Rutas protegidas */}
         <Route
