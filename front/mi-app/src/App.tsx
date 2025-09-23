@@ -6,11 +6,14 @@ import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";  // ✅ nuevo import
 import LoginForm from "./components/LoginForm";
 
-type PrivateProps = { children: React.ReactNode };
+type PrivateProps = { children: React.ReactNode; requiredRole?: string };
 
-const PrivateRoute = ({ children }: PrivateProps) => {
+const PrivateRoute = ({ children, requiredRole }: PrivateProps) => {
   const { user } = useAuth();
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  if (!user) return <Navigate to="/login" />;
+  if (requiredRole && user.role !== requiredRole)
+    return <Navigate to="/" />; // o página de “no autorizado”
+  return <>{children}</>;
 };
 
 export default function App() {
@@ -25,7 +28,7 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <PrivateRoute>
+            <PrivateRoute requiredRole="admin">
               <Admin />
             </PrivateRoute>
           }

@@ -8,6 +8,7 @@ import { AuthContext } from "./AuthContext";
 export type User = {
   id: string;
   name: string;
+  role: string; 
 };
 
 export type AuthContextProps = {
