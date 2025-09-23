@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from "./routes/auth.ts";
+import adminRoutes from "./routes/admin.ts";
 
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(
 
 app.use(express.json());
 app.use("/auth", authRoutes);
+app.use("/admin", adminRoutes);
 
 // Ruta simple para comprobar que el servidor responde
 app.get('/', (req, res) => {
