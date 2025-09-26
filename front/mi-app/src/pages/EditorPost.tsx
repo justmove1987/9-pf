@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import { useDropzone } from "react-dropzone";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 export default function EditorPost() {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [author, setAuthor] = useState(user?.name || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
+
+  // --- Tiptap editor ---
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: "<p>Escriu el teu contingut aquí...</p>",
+  });
 
   // Imagen de portada
   const { getRootProps, getInputProps } = useDropzone({
@@ -20,31 +25,38 @@ export default function EditorPost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editor) return;
+
+    // Contenido HTML de Tiptap
+    const content = editor.getHTML();
 
     let imageUrl = "";
     if (imageFile) {
-      // En este ejemplo la guardamos en base64; en producción usa S3/Cloudinary.
       const base64 = await toBase64(imageFile);
       imageUrl = base64 as string;
     }
 
     const token = localStorage.getItem("token");
-    const res = await fetch("http://localhost:3000/projects", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ title, content, imageUrl, author }),
-    });
+    try {
+      const res = await fetch("http://localhost:3000/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, author, content, imageUrl }),
+      });
 
-    if (res.ok) {
-      setMessage("Projecte creat correctament!");
+      if (!res.ok) throw new Error("Error creant el projecte");
+
+      setMessage("✅ Projecte creat correctament!");
       setTitle("");
-      setContent("");
+      setAuthor(user?.name || "");
       setImageFile(null);
-    } else {
-      setMessage("Error creant el projecte");
+      editor.commands.setContent("");
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Error creant el projecte");
     }
   };
 
@@ -62,7 +74,6 @@ export default function EditorPost() {
           className="border p-2 w-full"
         />
 
-        {/* Selección de autor (simple, usa input o dropdown si hay varios usuarios) */}
         <input
           type="text"
           placeholder="Autor"
@@ -71,7 +82,10 @@ export default function EditorPost() {
           className="border p-2 w-full"
         />
 
-        <div {...getRootProps()} className="border-dashed border-2 p-4 text-center cursor-pointer">
+        <div
+          {...getRootProps()}
+          className="border-dashed border-2 p-4 text-center cursor-pointer"
+        >
           <input {...getInputProps()} />
           {imageFile ? (
             <p>Imatge seleccionada: {imageFile.name}</p>
@@ -80,9 +94,15 @@ export default function EditorPost() {
           )}
         </div>
 
-        <ReactQuill value={content} onChange={setContent} className="bg-white" />
+        {/* Editor Tiptap */}
+        <div className="border p-2 bg-white rounded">
+          {editor && <EditorContent editor={editor} />}
+        </div>
 
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
           Publicar Projecte
         </button>
       </form>
