@@ -26,6 +26,7 @@ export default function RegisterForm() {
       setUser({
         id: data.user.id,
         name: data.user.name,
+        email: data.user.email,
         role: data.user.role,
       });
       localStorage.setItem("token", data.token);

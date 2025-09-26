@@ -4,9 +4,9 @@ import { useAuth } from "../context/useAuth";
 export default function UserPanel() {
   const { user, setUser } = useAuth();
 
-  // ✅ Inicialitzem amb les dades actuals
+  // ✅ Inicialitza amb les dades actuals del context
   const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
+  const [email, setEmail] = useState(user?.email || "");   // ← es veurà si el context porta email
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -35,16 +35,14 @@ export default function UserPanel() {
 
       const data = await res.json();
 
-      // ✅ Actualitzem context i localStorage amb les noves dades
-      setUser({
+      // ✅ Actualitza el context i el localStorage amb les dades retornades
+      const updatedUser = {
         ...user!,
         name: data.name,
-        email: data.email,   // 👈 afegim email per mantenir-lo sincronitzat
-      });
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ ...user, name: data.name, email: data.email })
-      );
+        email: data.email,
+      };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setMessage("Dades actualitzades correctament!");
       setCurrentPassword("");

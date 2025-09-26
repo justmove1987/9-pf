@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from "./routes/auth.ts";
 import adminRoutes from "./routes/admin.ts";
 import userRoutes from "./routes/user.ts";
+import projectsRoutes from "./routes/projects.ts";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use("/user", userRoutes);
 app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
+app.use("/projects", projectsRoutes);
 
 // Ruta simple para comprobar que el servidor responde
 app.get('/', (req, res) => {
