@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 import connectDB from './config/db.ts';
 import app from './server.ts';
 
+
 dotenv.config()
 
 if (process.env.NODE_ENV !== 'test') {

@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from "./routes/auth.ts";
 import adminRoutes from "./routes/admin.ts";
-
+import userRoutes from "./routes/user.ts";
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ app.use(
     credentials: true
   })
 );
-
+app.use("/user", userRoutes);
 app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);

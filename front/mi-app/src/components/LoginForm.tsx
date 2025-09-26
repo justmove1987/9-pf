@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
+import { Link } from "react-router-dom";
 
 export default function LoginForm() {
   const { setUser } = useAuth();
@@ -17,15 +18,23 @@ export default function LoginForm() {
       if (!res.ok) throw new Error("Credenciales inválidas");
       const data = await res.json();
 
-      // ✅ Guardar usuario y rol en el contexto y localStorage
       setUser({
         id: data.user.id,
         name: data.user.name,
+        email: data.user.email,
         role: data.user.role,
       });
       localStorage.setItem("token", data.token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role,
+        })
+      );
 
-      // Redirigir a dashboard o donde quieras
       window.location.href = "/dashboard";
     } catch (err) {
       console.error(err);
@@ -34,13 +43,14 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 max-w-sm mx-auto">
       <input
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         className="border p-2 w-full"
+        required
       />
       <input
         type="password"
@@ -48,10 +58,25 @@ export default function LoginForm() {
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Contraseña"
         className="border p-2 w-full"
+        required
       />
-      <button className="bg-blue-600 text-white px-4 py-2 rounded">
-        Iniciar sesión
-      </button>
+
+      <div className="flex items-center justify-between mt-4">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Iniciar sesión
+        </button>
+
+        {/* ➕ Botó/enllaç per registrar-se */}
+        <Link
+          to="/register"
+          className="ml-4 text-blue-600 underline hover:text-blue-800"
+        >
+          Crear compte
+        </Link>
+      </div>
     </form>
   );
 }

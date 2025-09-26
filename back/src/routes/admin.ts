@@ -1,26 +1,39 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import User from "../models/User.ts";
 import bcrypt from "bcrypt";
+import User from "../models/User.ts";
 import requireAdmin from "../middleware/requireAdmin.ts";
 
 const router = Router();
 
+/* ----------------------- Llistar tots els usuaris ----------------------- */
+router.get("/users", requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    // Retorna tots els usuaris excepte el camp password
+    const users = await User.find({}, { password: 0 });
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error obtenint usuaris" });
+  }
+});
+
+/* ----------------------- Registrar un nou usuari ----------------------- */
 router.post("/register", async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
 
   try {
-    // Hashed password
+    // Encripta la contrasenya
     const hashed = await bcrypt.hash(password, 10);
 
-    // 🔑 Aquí decidim el rol: admin si és el teu correu, si no, editor
+    // Assigna rol: admin si és el teu correu, sinó editor
     const role = email === "enricabadrovira@gmail.com" ? "admin" : "editor";
 
     const user = new User({
       name,
       email,
       password: hashed,
-      role,           // 👈 afegim el camp role
+      role,
     });
 
     await user.save();
@@ -30,22 +43,38 @@ router.post("/register", async (req: Request, res: Response) => {
       user: { id: user._id, name: user.name, role: user.role },
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error en el registre" });
   }
 });
 
-
-router.put("/users/:id", requireAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { name, role } = req.body;
-  const updated = await User.findByIdAndUpdate(id, { name, role }, { new: true });
-  res.json(updated);
+/* ----------------------- Editar usuari ----------------------- */
+router.put("/users/:id", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, role } = req.body;
+    const updated = await User.findByIdAndUpdate(
+      id,
+      { name, role },
+      { new: true }
+    );
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error actualitzant usuari" });
+  }
 });
 
-router.delete("/users/:id", requireAdmin, async (req, res) => {
-  const { id } = req.params;
-  await User.findByIdAndDelete(id);
-  res.json({ success: true });
+/* ----------------------- Eliminar usuari ----------------------- */
+router.delete("/users/:id", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error eliminant usuari" });
+  }
 });
 
 export default router;

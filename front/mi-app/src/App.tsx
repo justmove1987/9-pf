@@ -6,6 +6,8 @@ import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";  // ✅ nuevo import
 import LoginForm from "./components/LoginForm";
 import Register from "./pages/Register";
+import Header from "./components/Header";
+import UserPanel from "./pages/UserPanel";
 
 type PrivateProps = { children: React.ReactNode; requiredRole?: string };
 
@@ -19,12 +21,22 @@ const PrivateRoute = ({ children, requiredRole }: PrivateProps) => {
 
 export default function App() {
   return (
+    
     <BrowserRouter>
+    <Header />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<Register />} />
+        <Route
+          path="/user"
+          element={
+            <PrivateRoute>
+                <UserPanel />
+              </PrivateRoute>
+            }
+          />
 
         {/* 🔒 Rutas protegidas */}
         <Route
