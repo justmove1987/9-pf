@@ -8,6 +8,7 @@ import LoginForm from "./components/LoginForm";
 import Register from "./pages/Register";
 import Header from "./components/Header";
 import UserPanel from "./pages/UserPanel";
+import EditorPost from "./pages/EditorPost";
 
 type PrivateProps = { children: React.ReactNode; requiredRole?: string };
 
@@ -29,6 +30,14 @@ export default function App() {
         <Route path="/projects" element={<Projects />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<Register />} />
+        <Route
+          path="/editorPost"
+          element={
+            <PrivateRoute>     {/* si vols que només loguejats hi entrin */}
+              <EditorPost />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/user"
           element={

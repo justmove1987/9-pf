@@ -38,7 +38,7 @@ export default function Header() {
                     </Link>
 
                     {(user.role === "editor" || user.role === "admin") && (
-                    <Link to="/editor" className="hover:text-blue-300">
+                    <Link to="/editorPost" className="hover:text-blue-300">
                         Editor de projectes
                     </Link>
                     )}
