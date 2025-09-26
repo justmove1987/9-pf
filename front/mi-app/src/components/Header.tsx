@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import logo from "../assets/fondo2.png"; // ✅ importem la imatge
 
 export default function Header() {
   const { user, setUser } = useAuth();
@@ -13,15 +14,20 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gray-900 text-white shadow-md">
+    <header className="text-white shadow-md" style={{ backgroundColor: "#087c35" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* LOGO */}
           <div className="flex-shrink-0">
-            <Link to="/" className="text-xl font-bold">
-              Editorial
+            <Link to="/">
+              <img
+                src={logo}
+                alt="Editorial logo"
+                className="h-10 w-auto"   // ajusta la mida segons vulguis
+              />
             </Link>
           </div>
+
 
           {/* LINKS */}
           <nav className="flex space-x-6">
