@@ -26,10 +26,19 @@ export default function RegisterForm() {
       setUser({
         id: data.user.id,
         name: data.user.name,
-        email: data.user.email,
+        email: data.user.email,   // ✅ afegeix l’email
         role: data.user.role,
       });
-      localStorage.setItem("token", data.token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email, // ✅ també aquí
+          role: data.user.role,
+        })
+      );
+
 
       // redirigir a dashboard o donde quieras
       window.location.href = "/dashboard";

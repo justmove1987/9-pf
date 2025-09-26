@@ -23,10 +23,9 @@ router.post("/register", async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
 
   try {
-    // Encripta la contrasenya
     const hashed = await bcrypt.hash(password, 10);
 
-    // Assigna rol: admin si és el teu correu, sinó editor
+    // Rol per defecte: admin si és el teu correu, sinó editor
     const role = email === "enricabadrovira@gmail.com" ? "admin" : "editor";
 
     const user = new User({
@@ -52,13 +51,33 @@ router.post("/register", async (req: Request, res: Response) => {
 router.put("/users/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, role } = req.body;
-    const updated = await User.findByIdAndUpdate(
-      id,
-      { name, role },
-      { new: true }
-    );
-    res.json(updated);
+    const { name, email, role, password } = req.body;
+
+    const updateFields: Record<string, any> = {};
+    if (name) updateFields.name = name;
+    if (email) updateFields.email = email;
+    if (role) updateFields.role = role;
+
+    // Si s’ha passat una nova contrasenya l’encriptem
+    if (password) {
+      updateFields.password = await bcrypt.hash(password, 10);
+    }
+
+    const updated = await User.findByIdAndUpdate(id, updateFields, {
+      new: true,
+      select: "-password", // no retornar el hash
+    });
+
+    if (!updated) {
+      return res.status(404).json({ message: "Usuari no trobat" });
+    }
+
+    res.json({
+      id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error actualitzant usuari" });
