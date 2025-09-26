@@ -19,9 +19,7 @@ export default function Admin() {
     const fetchUsers = async () => {
       try {
         const res = await fetch("http://localhost:3000/admin/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Error carregant usuaris");
         const data: User[] = await res.json();
@@ -43,16 +41,35 @@ export default function Admin() {
     try {
       const res = await fetch(`http://localhost:3000/admin/users/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Error eliminant usuari");
-      // refrescar llista
       setUsers((prev) => prev.filter((u) => u._id !== id));
     } catch (err) {
       console.error(err);
       alert("Error eliminant usuari");
+    }
+  };
+
+  // ✏️ Canviar rol
+  const handleRoleChange = async (id: string, newRole: string) => {
+    try {
+      const res = await fetch(`http://localhost:3000/admin/users/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+      if (!res.ok) throw new Error("Error actualitzant rol");
+      const updated: User = await res.json();
+      setUsers((prev) =>
+        prev.map((u) => (u._id === id ? { ...u, role: updated.role } : u))
+      );
+    } catch (err) {
+      console.error(err);
+      alert("No s’ha pogut actualitzar el rol");
     }
   };
 
@@ -81,7 +98,17 @@ export default function Admin() {
               <tr key={u._id} className="hover:bg-gray-50">
                 <td className="p-2 border-b">{u.name}</td>
                 <td className="p-2 border-b">{u.email}</td>
-                <td className="p-2 border-b">{u.role}</td>
+                <td className="p-2 border-b">
+                  <select
+                    value={u.role}
+                    onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                    className="border rounded p-1"
+                  >
+                    <option value="subscriber">subscriptor</option>
+                    <option value="editor">editor</option>
+                    <option value="admin">admin</option>
+                  </select>
+                </td>
                 <td className="p-2 border-b">
                   <button
                     onClick={() => handleDelete(u._id)}

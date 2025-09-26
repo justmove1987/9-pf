@@ -29,6 +29,7 @@ export default function RegisterForm() {
         email: data.user.email,   // ✅ afegeix l’email
         role: data.user.role,
       });
+      localStorage.setItem("token", data.token);
       localStorage.setItem(
         "user",
         JSON.stringify({

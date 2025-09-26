@@ -18,18 +18,13 @@ export default function UserPanel() {
       if (!token) throw new Error("Falta el token");
 
       const res = await fetch("http://localhost:3000/user/me", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          currentPassword,
-          newPassword,
-        }),
-      });
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify({ name, email, currentPassword, newPassword }),
+});
 
       if (!res.ok) throw new Error("Error actualitzant l’usuari");
 
