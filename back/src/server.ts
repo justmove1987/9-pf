@@ -5,6 +5,8 @@ import authRoutes from "./routes/auth.ts";
 import adminRoutes from "./routes/admin.ts";
 import userRoutes from "./routes/user.ts";
 import projectsRoutes from "./routes/projects.ts";
+import uploadRoutes from "./routes/upload.ts";
+import path from "path";
 
 dotenv.config();
 
@@ -36,6 +38,8 @@ app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/user", userRoutes);
 app.use("/projects", projectsRoutes);
+app.use("/uploads", express.static("uploads"));   // para servir las imágenes
+app.use("/upload", uploadRoutes); 
 
 // Ruta simple de prueba
 app.get("/", (_req, res) => {

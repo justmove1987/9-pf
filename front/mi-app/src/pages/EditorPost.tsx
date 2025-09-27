@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useDropzone } from "react-dropzone";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from "@ckeditor-custom/ckeditor";
+
+
 
 export default function EditorPost() {
   const { user } = useAuth();
@@ -12,7 +14,7 @@ export default function EditorPost() {
   const [message, setMessage] = useState("");
   const [content, setContent] = useState("<p>Escriu el teu contingut aquí...</p>");
 
-  // Imagen de portada
+  // Dropzone para portada
   const { getRootProps, getInputProps } = useDropzone({
     accept: { "image/*": [] },
     onDrop: (accepted) => setImageFile(accepted[0]),
@@ -20,22 +22,24 @@ export default function EditorPost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    let imageUrl = "";
-    if (imageFile) {
-      const base64 = await toBase64(imageFile);
-      imageUrl = base64 as string;
+    if (!title || !content) {
+      setMessage("❌ Cal títol i contingut");
+      return;
     }
+
+    // --- Usar FormData ---
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("author", author);
+    formData.append("content", content);
+    if (imageFile) formData.append("cover", imageFile); // campo 'cover' debe coincidir con el backend
 
     const token = localStorage.getItem("token");
     try {
       const res = await fetch("http://localhost:3000/projects", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title, author, content, imageUrl }),
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
 
       if (!res.ok) throw new Error("Error creant el projecte");
@@ -73,6 +77,7 @@ export default function EditorPost() {
           className="border p-2 w-full"
         />
 
+        {/* Imagen de portada */}
         <div
           {...getRootProps()}
           className="border-dashed border-2 p-4 text-center cursor-pointer"
@@ -85,14 +90,26 @@ export default function EditorPost() {
           )}
         </div>
 
-        {/* ✅ CKEditor */}
+        {/* CKEditor */}
         <div className="border p-2 bg-white rounded">
-          <CKEditor
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          editor={ClassicEditor as any}
-          data={content}
-          onChange={(_, editor) => setContent(editor.getData())}
-        />
+       <CKEditor
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  editor={ClassicEditor as any}
+  data={content}
+  config={{
+    simpleUpload: {
+      // 👇 endpoint del backend per pujar fitxers
+      uploadUrl: 'http://localhost:3000/upload',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+      }
+    }
+  }}
+  onChange={(_, editor) => setContent(editor.getData())}
+/>
+
+
+
 
 
 
@@ -107,13 +124,4 @@ export default function EditorPost() {
       </form>
     </div>
   );
-}
-
-function toBase64(file: File) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (err) => reject(err);
-  });
 }

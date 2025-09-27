@@ -1,11 +1,11 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import Project from "../models/Project.ts";
-import requireRole from "../middleware/requireRole.ts";
+import { upload } from "../middleware/upload.ts";
 
 const router = Router();
 
-/* ─────────────── Middleware: requiere token y guarda userId + userRole ─────────────── */
+// Middleware per comprovar token i rol
 function requireRoleEditorOrAdmin(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -18,23 +18,22 @@ function requireRoleEditorOrAdmin(req: Request, res: Response, next: NextFunctio
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
-    // Guardamos en req para usar después
-    (req as any).userId = payload.id;
-    (req as any).userRole = payload.role;
+    // 👇 aquí ja sabem que token és string
+    const payload = jwt.verify(token as string, process.env.JWT_SECRET || "secret") as any;
 
-    // Solo admin o editor pueden continuar
     if (payload.role !== "admin" && payload.role !== "editor") {
       return res.status(403).json({ message: "Només editors o admins poden crear projectes" });
     }
 
+    (req as any).userId = payload.id;
     next();
   } catch {
     return res.status(401).json({ message: "Token invàlid" });
   }
 }
 
-/* ─────────────── Obtener todos los proyectos (público) ─────────────── */
+
+// GET /projects  ← Aquesta és la que falta si dóna 404
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const projects = await Project.find().sort({ createdAt: -1 });
@@ -45,25 +44,35 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
-/* ─────────────── Crear un proyecto (rol editor o admin) ─────────────── */
-router.post("/", requireRoleEditorOrAdmin, async (req: Request, res: Response) => {
-  const { title, content, imageUrl, author } = req.body;
+/* --- Crear projecte amb pujada d’imatge de portada --- */
+router.post(
+  "/",
+  requireRoleEditorOrAdmin,
+  upload.single("cover"),  
+               // <== important: el nom 'cover'
+  async (req: Request, res: Response) => {
+    
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No s'ha pujat cap imatge de portada" });
+      }
+      const { title, author, content } = req.body;
 
-  try {
-    const project = new Project({
-      title,
-      content,
-      imageUrl,
-      author,
-      createdBy: (req as any).userId,
-    });
+      const project = new Project({
+        title,
+        author,
+        content,
+        imageUrl: `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`,
+        createdBy: (req as any).userId,
+      });
 
-    await project.save();
-    res.json(project);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error creant projecte" });
+      await project.save();
+      res.json(project);
+    } catch (err) {
+      console.error("❌ Error creant projecte:", err);
+      res.status(500).json({ message: "Error creant projecte" });
+    }
   }
-});
+);
 
 export default router;
