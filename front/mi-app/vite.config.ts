@@ -10,7 +10,11 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@ckeditor-custom": resolve(__dirname, "../../custom-ckeditor-build/build")
+      // 🔑 Alias que apunta al fichero JS generado en la build personalizada
+      '@ckeditor-custom/ckeditor': resolve(
+        __dirname,
+        '../../custom-ckeditor-build/build/ckeditor.js'
+      )
     }
   }
-});
+})

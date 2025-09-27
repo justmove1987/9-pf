@@ -22,10 +22,10 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 
 // ✅ Endpoint que usa CKEditor para subir imágenes
 router.post("/", upload.single("upload"), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "Falta el fitxer" });
-  res.json({
-    url: `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`,
-  });
+  if (!req.file) return res.status(400).json({ error: "No file" });
+  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  res.status(201).json({ url });
 });
+
 
 export default router;

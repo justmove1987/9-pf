@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useDropzone } from "react-dropzone";
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from "@ckeditor-custom/ckeditor";
+// Importa usando el alias definido en tsconfig y como namespace
+import ClassicEditor from '@ckeditor-custom/ckeditor'
+
 
 
 
@@ -93,20 +95,19 @@ export default function EditorPost() {
         {/* CKEditor */}
         <div className="border p-2 bg-white rounded">
        <CKEditor
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  editor={ClassicEditor as any}
-  data={content}
-  config={{
-    simpleUpload: {
-      // 👇 endpoint del backend per pujar fitxers
-      uploadUrl: 'http://localhost:3000/upload',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token') || ''}`
-      }
-    }
-  }}
-  onChange={(_, editor) => setContent(editor.getData())}
-/>
+          editor={ClassicEditor}
+          data={content}
+          config={{
+            simpleUpload: {
+              uploadUrl: 'http://localhost:3000/upload',
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+              }
+            }
+          }}
+          onChange={(_, editor) => setContent(editor.getData())}
+        />
+
 
 
 
