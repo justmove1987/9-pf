@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useDropzone } from "react-dropzone";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
 
 export default function EditorPost() {
   const { user } = useAuth();
@@ -10,12 +10,7 @@ export default function EditorPost() {
   const [author, setAuthor] = useState(user?.name || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
-
-  // --- Tiptap editor ---
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: "<p>Escriu el teu contingut aquí...</p>",
-  });
+  const [content, setContent] = useState("<p>Escriu el teu contingut aquí...</p>");
 
   // Imagen de portada
   const { getRootProps, getInputProps } = useDropzone({
@@ -25,10 +20,6 @@ export default function EditorPost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editor) return;
-
-    // Contenido HTML de Tiptap
-    const content = editor.getHTML();
 
     let imageUrl = "";
     if (imageFile) {
@@ -53,7 +44,7 @@ export default function EditorPost() {
       setTitle("");
       setAuthor(user?.name || "");
       setImageFile(null);
-      editor.commands.setContent("");
+      setContent("");
     } catch (err) {
       console.error(err);
       setMessage("❌ Error creant el projecte");
@@ -94,9 +85,17 @@ export default function EditorPost() {
           )}
         </div>
 
-        {/* Editor Tiptap */}
+        {/* ✅ CKEditor */}
         <div className="border p-2 bg-white rounded">
-          {editor && <EditorContent editor={editor} />}
+          <CKEditor
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          editor={ClassicEditor as any}
+          data={content}
+          onChange={(_, editor) => setContent(editor.getData())}
+        />
+
+
+
         </div>
 
         <button
