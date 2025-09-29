@@ -47,11 +47,13 @@ router.get("/", async (_req: Request, res: Response) => {
 
 /* ─────────────── Crear un proyecto (rol editor o admin) ─────────────── */
 router.post("/", requireRoleEditorOrAdmin, async (req: Request, res: Response) => {
-  const { title, content, imageUrl, author } = req.body;
+  const { title, subtitle, category, content, imageUrl, author } = req.body;
 
   try {
     const project = new Project({
       title,
+      subtitle,
+      category,
       content,
       imageUrl,
       author,
@@ -63,6 +65,17 @@ router.post("/", requireRoleEditorOrAdmin, async (req: Request, res: Response) =
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error creant projecte" });
+  }
+});
+
+// 🗑️ Eliminar projecte (només admin)
+router.delete("/:id", requireRoleEditorOrAdmin, async (req: Request, res: Response) => {
+  try {
+    await Project.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error eliminant projecte" });
   }
 });
 
