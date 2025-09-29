@@ -5,14 +5,18 @@ import { useDropzone } from "react-dropzone";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 
 export default function EditorPost() {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
-  const [subtitle, setSubtitle] = useState("");                      // ✨ Nou
-  const [category, setCategory] = useState<"Paper"|"Digital"|"Editorial">("Paper"); // ✨ Nou
+  const [subtitle, setSubtitle] = useState("");
+  const [category, setCategory] = useState<"Paper" | "Digital" | "Editorial">(
+    "Paper"
+  );
   const [author, setAuthor] = useState(user?.name || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
@@ -24,7 +28,7 @@ export default function EditorPost() {
     onDrop: (accepted) => setImageFile(accepted[0]),
   });
 
-  // ---- Helper per pujar imatge dins l’editor ----
+  // ---- Pujada d’imatges ----
   const uploadFile = useCallback(async (file: File): Promise<string> => {
     const form = new FormData();
     form.append("file", file);
@@ -39,10 +43,12 @@ export default function EditorPost() {
     return data.url as string;
   }, []);
 
-  // ---- TipTap editor ----
+  // ---- Editor TipTap ----
   const editor = useEditor({
     extensions: [
-      StarterKit,    
+      StarterKit,
+      Underline,
+      Link.configure({ openOnClick: true, autolink: true }),
       Image.configure({ inline: false, allowBase64: false }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Escriu el teu contingut aquí..." }),
@@ -55,36 +61,26 @@ export default function EditorPost() {
           if (!files?.length) return;
           const image = Array.from(files).find(f => f.type.startsWith("image/"));
           if (!image) return;
-
           event.preventDefault();
-          try {
-            const url = await uploadFile(image);
-            editor?.chain().focus().setImage({ src: url }).run();
-          } catch (e) {
-            console.error(e);
-          }
+          const url = await uploadFile(image);
+          editor?.chain().focus().setImage({ src: url }).run();
         })();
         return true;
       },
       handlePaste: (_view, event) => {
+        // ✅ Només interceptem si hi ha imatge, sinó deixem enganxar text
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        const fileItem = Array.from(items).find(
+          it => it.kind === "file" && it.type.startsWith("image/")
+        );
+        if (!fileItem) return false;
+        event.preventDefault();
+        const file = fileItem.getAsFile();
+        if (!file) return false;
         (async () => {
-          const items = event.clipboardData?.items;
-          if (!items) return;
-          const fileItem = Array.from(items).find(
-            it => it.kind === "file" && it.type.startsWith("image/")
-          );
-          if (!fileItem) return;
-
-          event.preventDefault();
-          const file = fileItem.getAsFile();
-          if (!file) return;
-
-          try {
-            const url = await uploadFile(file);
-            editor?.chain().focus().setImage({ src: url }).run();
-          } catch (e) {
-            console.error(e);
-          }
+          const url = await uploadFile(file);
+          editor?.chain().focus().setImage({ src: url }).run();
         })();
         return true;
       },
@@ -95,102 +91,71 @@ export default function EditorPost() {
   });
 
   // ---- Barra d'eines ----
-  // ---- Barra d'eines completa ----
-const modulesToolbar = useMemo(
-  () => (
-    <div className="flex flex-wrap gap-2 mb-2 text-sm">
+  const toolbar = useMemo(
+    () => (
+      <div className="flex flex-wrap gap-2 mb-2 text-sm">
+        <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()}>B</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()}>I</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleUnderline().run()}>U</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()}>• Llista</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>1. Llista</button>
+        <select
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            if (v === 0) editor?.chain().focus().setParagraph().run();
+            else editor?.chain().focus().toggleHeading({ level: v as 1|2|3 }).run();
+          }}
+          defaultValue={0}
+        >
+          <option value={0}>Paràgraf</option>
+          <option value={1}>H1</option>
+          <option value={2}>H2</option>
+          <option value={3}>H3</option>
+        </select>
+        <button type="button" onClick={() => editor?.chain().focus().setTextAlign("left").run()}>↤</button>
+        <button type="button" onClick={() => editor?.chain().focus().setTextAlign("center").run()}>↔</button>
+        <button type="button" onClick={() => editor?.chain().focus().setTextAlign("right").run()}>↦</button>
+        <button
+          type="button"
+          onClick={() => {
+            if (!editor) return;
+            if (editor.isActive("link")) editor.chain().focus().unsetLink().run();
+            else {
+              const url = window.prompt("Introdueix una URL");
+              if (url) editor.chain().focus().setLink({ href: url }).run();
+            }
+          }}
+        >
+          Enllaç
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (!editor) return;
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.onchange = async () => {
+              const file = input.files?.[0];
+              if (!file) return;
+              const url = await uploadFile(file);
+              editor.chain().focus().setImage({ src: url }).run();
+            };
+            input.click();
+          }}
+        >
+          Imatge
+        </button>
+      </div>
+    ),
+    [editor, uploadFile]
+  );
 
-      {/* Estils bàsics */}
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().toggleBold().run()}
-        aria-pressed={editor?.isActive("bold")}>B</button>
-
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().toggleItalic().run()}
-        aria-pressed={editor?.isActive("italic")}>I</button>
-
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().toggleUnderline().run()}
-        aria-pressed={editor?.isActive("underline")}>U</button>
-
-      {/* Llistes */}
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().toggleBulletList().run()}
-        aria-pressed={editor?.isActive("bulletList")}>• Llista</button>
-
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-        aria-pressed={editor?.isActive("orderedList")}>1. Llista</button>
-
-      {/* Encapçalaments */}
-      <select
-        className="px-2 py-1 border rounded"
-        onChange={(e) => {
-          const v = Number(e.target.value);
-          if (v === 0) editor?.chain().focus().setParagraph().run();
-          else editor?.chain().focus().toggleHeading({ level: v as 1|2|3 }).run();
-        }}
-        defaultValue={0}
-      >
-        <option value={0}>Paràgraf</option>
-        <option value={1}>H1</option>
-        <option value={2}>H2</option>
-        <option value={3}>H3</option>
-      </select>
-
-      {/* Alineació */}
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().setTextAlign("left").run()}>↤</button>
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().setTextAlign("center").run()}>↔</button>
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => editor?.chain().focus().setTextAlign("right").run()}>↦</button>
-
-      {/* Enllaç */}
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => {
-          if (!editor) return;
-          if (editor.isActive("link")) editor.chain().focus().unsetLink().run();
-          else {
-            const url = window.prompt("Introdueix una URL");
-            if (url) editor.chain().focus().setLink({ href: url }).run();
-          }
-        }}>
-        Enllaç
-      </button>
-
-      {/* Imatge (selector local) */}
-      <button type="button" className="px-2 py-1 border rounded"
-        onClick={() => {
-          if (!editor) return;
-          const input = document.createElement("input");
-          input.type = "file";
-          input.accept = "image/*";
-          input.onchange = async () => {
-            const file = input.files?.[0];
-            if (!file) return;
-            const url = await uploadFile(file);
-            editor.chain().focus().setImage({ src: url }).run();
-          };
-          input.click();
-        }}>
-        Imatge
-      </button>
-    </div>
-  ),
-  [editor, uploadFile]
-);
-
-
+  // ---- Submit ----
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // portada en base64
     let imageUrl = "";
-    if (imageFile) {
-      const base64 = await toBase64(imageFile);
-      imageUrl = base64 as string;
-    }
+    if (imageFile) imageUrl = (await toBase64(imageFile)) as string;
 
     const token = localStorage.getItem("token");
     try {
@@ -200,16 +165,8 @@ const modulesToolbar = useMemo(
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          title,
-          subtitle,    // ✨ inclòs
-          category,    // ✨ inclòs
-          author,
-          content,
-          imageUrl
-        }),
+        body: JSON.stringify({ title, subtitle, category, author, content, imageUrl }),
       });
-
       if (!res.ok) throw new Error("Error creant el projecte");
 
       setMessage("✅ Projecte creat correctament!");
@@ -232,65 +189,32 @@ const modulesToolbar = useMemo(
       {message && <p className="mb-4 text-green-600">{message}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Títol"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="border p-2 w-full"
-        />
-
-        {/* ✨ Subtítol / Extracte */}
-        <input
-          type="text"
-          placeholder="Subtítol / Extracte"
-          value={subtitle}
-          onChange={(e) => setSubtitle(e.target.value)}
-          className="border p-2 w-full"
-        />
-
-        {/* ✨ Categoria */}
-        <select
+        <input className="border p-2 w-full" placeholder="Títol" value={title}
+          onChange={(e) => setTitle(e.target.value)} />
+        <input className="border p-2 w-full" placeholder="Subtítol / Extracte" value={subtitle}
+          onChange={(e) => setSubtitle(e.target.value)} />
+        <select className="border p-2 w-full"
           value={category}
           onChange={(e) => setCategory(e.target.value as "Paper"|"Digital"|"Editorial")}
-          className="border p-2 w-full"
         >
           <option value="Paper">Paper</option>
           <option value="Digital">Digital</option>
           <option value="Editorial">Editorial</option>
         </select>
+        <input className="border p-2 w-full" placeholder="Autor" value={author}
+          onChange={(e) => setAuthor(e.target.value)} />
 
-        <input
-          type="text"
-          placeholder="Autor"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          className="border p-2 w-full"
-        />
-
-        {/* Portada */}
-        <div
-          {...getRootProps()}
-          className="border-dashed border-2 p-4 text-center cursor-pointer"
-        >
+        <div {...getRootProps()} className="border-dashed border-2 p-4 text-center cursor-pointer">
           <input {...getInputProps()} />
-          {imageFile ? (
-            <p>Imatge seleccionada: {imageFile.name}</p>
-          ) : (
-            <p>Arrossega o fes clic per pujar imatge de portada</p>
-          )}
+          {imageFile ? <p>Imatge seleccionada: {imageFile.name}</p> : <p>Arrossega o fes clic per pujar imatge de portada</p>}
         </div>
 
-        {/* Editor TipTap */}
         <div className="bg-white rounded border p-2">
-          {modulesToolbar}
+          {toolbar}
           <EditorContent editor={editor} className="min-h-48 prose max-w-none" />
         </div>
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
           Publicar Projecte
         </button>
       </form>
