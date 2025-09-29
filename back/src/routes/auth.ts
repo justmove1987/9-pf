@@ -29,32 +29,39 @@ router.post("/login", async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error al iniciar sessió" });
+    res.status(500).json({ message: "Error iniciant sessió" });
   }
 });
 
-/* ---------- REGISTER ---------- */
+/* ---------- REGISTER (corregit) ---------- */
 router.post("/register", async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
 
   try {
     const hashed = await bcrypt.hash(password, 10);
 
-    // Si és el teu correu → admin; en cas contrari el model posarà "subscriber"
-    const role = email === "enricabadrovira@gmail.com" ? "admin" : undefined;
+    // Rol per defecte: admin si és el teu correu, sinó subscriber
+    const role = email === "enricabadrovira@gmail.com" ? "admin" : "subscriber";
 
     const user = new User({
       name,
       email,
       password: hashed,
-      ...(role ? { role } : {}), // només afegim role si és admin
+      role,
     });
 
     await user.save();
 
+    // ✅ Generar token per a l’usuari acabat de crear
+    const token = jwt.sign(
+      { id: user._id, name: user.name, role: user.role },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "1d" }
+    );
+
     res.json({
-      message: "Usuari creat correctament",
-      user: { id: user._id, name: user.name, role: user.role },
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
     console.error(err);

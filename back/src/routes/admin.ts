@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import User from "../models/User.ts";
 import requireAdmin from "../middleware/requireAdmin.ts";
 
@@ -37,8 +38,16 @@ router.post("/register", async (req: Request, res: Response) => {
 
     await user.save();
 
+    // ✅ Generar token perquè el front pugui iniciar sessió automàticament
+    const token = jwt.sign(
+      { id: user._id, name: user.name, role: user.role },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "1d" }
+    );
+
     res.json({
       message: "Usuari creat correctament",
+      token, // 👈 ara també retornem el token
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
