@@ -10,14 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-upload": "^46.1.1",
+    "@tiptap/extension-image": "^3.6.2",
+    "@tiptap/extension-link": "^3.6.2",
+    "@tiptap/extension-placeholder": "^3.6.2",
+    "@tiptap/extension-text-align": "^3.6.2",
+    "@tiptap/extension-underline": "^3.6.2",
     "@tiptap/react": "^3.6.1",
     "@tiptap/starter-kit": "^3.6.1",
     "axios": "^1.12.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-dropzone": "^14.3.8",
-    "react-quill": "^2.0.0",
     "react-router-dom": "^7.9.1"
   },
   "devDependencies": {
