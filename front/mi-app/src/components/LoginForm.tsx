@@ -11,13 +11,16 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       const res = await fetch("http://localhost:3000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) throw new Error("Credenciales inválidas");
-      const data = await res.json();
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
 
+if (!res.ok) throw new Error("Error iniciant sessió");
+
+const data = await res.json();
+localStorage.setItem("token", data.token);
+localStorage.setItem("user", JSON.stringify(data.user));
       setUser({
         id: data.user.id,
         name: data.user.name,

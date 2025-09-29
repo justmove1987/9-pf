@@ -70,12 +70,14 @@ export default function UserPanel() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Correu"
           className="border p-2 w-full"
+          autoComplete="username"
         />
 
         <hr className="my-4" />
 
         <input
           type="password"
+          autoComplete="current-password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder="Contrasenya actual (per canviar-la)"
@@ -83,6 +85,7 @@ export default function UserPanel() {
         />
         <input
           type="password"
+          autoComplete="new-password" 
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder="Nova contrasenya"

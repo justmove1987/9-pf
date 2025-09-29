@@ -21,6 +21,8 @@ app.use(
       "http://localhost:5173",              // desarrollo
       "https://inprocode-frontend.vercel.app", // producción
     ],
+    methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
     credentials: true,
   })
 );
