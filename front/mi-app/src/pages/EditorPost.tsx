@@ -9,7 +9,8 @@ import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
-import { ImageBlock } from "../extensions/ImageBlock"; // ✅ extensió pròpia
+import { ImageBlock } from "../extensions/ImageBlock"; // ✅
+
 
 export default function EditorPost() {
   const { user } = useAuth();
