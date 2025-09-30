@@ -1,14 +1,15 @@
+// front/mi-app/src/pages/EditorPost.tsx
 import { useCallback, useMemo, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useDropzone } from "react-dropzone";
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
+import { ImageBlock } from "../extensions/ImageBlock"; // ✅ extensió pròpia
 
 export default function EditorPost() {
   const { user } = useAuth();
@@ -46,64 +47,36 @@ export default function EditorPost() {
   // ---- Editor TipTap ----
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
+      StarterKit.configure({ underline: false, link: false }),
       Link.configure({ openOnClick: true, autolink: true }),
-      Image.configure({ inline: false, allowBase64: false }),
+      Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Escriu el teu contingut aquí..." }),
+      ImageBlock, // ✅ substitueix Image natiu
     ],
     content,
-    editorProps: {
-      handleDrop: (_view, event) => {
-        (async () => {
-          const files = event.dataTransfer?.files;
-          if (!files?.length) return;
-          const image = Array.from(files).find(f => f.type.startsWith("image/"));
-          if (!image) return;
-          event.preventDefault();
-          const url = await uploadFile(image);
-          editor?.chain().focus().setImage({ src: url }).run();
-        })();
-        return true;
-      },
-      handlePaste: (_view, event) => {
-        // ✅ Només interceptem si hi ha imatge, sinó deixem enganxar text
-        const items = event.clipboardData?.items;
-        if (!items) return false;
-        const fileItem = Array.from(items).find(
-          it => it.kind === "file" && it.type.startsWith("image/")
-        );
-        if (!fileItem) return false;
-        event.preventDefault();
-        const file = fileItem.getAsFile();
-        if (!file) return false;
-        (async () => {
-          const url = await uploadFile(file);
-          editor?.chain().focus().setImage({ src: url }).run();
-        })();
-        return true;
-      },
-    },
     onUpdate({ editor }) {
       setContent(editor.getHTML());
     },
   });
 
   // ---- Barra d'eines ----
-  const toolbar = useMemo(
-    () => (
+  const toolbar = useMemo(() => {
+    if (!editor) return null;
+
+    return (
       <div className="flex flex-wrap gap-2 mb-2 text-sm">
-        <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()}>B</button>
-        <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()}>I</button>
-        <button type="button" onClick={() => editor?.chain().focus().toggleUnderline().run()}>U</button>
-        <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()}>• Llista</button>
-        <button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>1. Llista</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()}>I</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()}>U</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()}>• Llista</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. Llista</button>
+
         <select
           onChange={(e) => {
             const v = Number(e.target.value);
-            if (v === 0) editor?.chain().focus().setParagraph().run();
-            else editor?.chain().focus().toggleHeading({ level: v as 1|2|3 }).run();
+            if (v === 0) editor.chain().focus().setParagraph().run();
+            else editor.chain().focus().toggleHeading({ level: v as 1 | 2 | 3 }).run();
           }}
           defaultValue={0}
         >
@@ -112,9 +85,11 @@ export default function EditorPost() {
           <option value={2}>H2</option>
           <option value={3}>H3</option>
         </select>
-        <button type="button" onClick={() => editor?.chain().focus().setTextAlign("left").run()}>↤</button>
-        <button type="button" onClick={() => editor?.chain().focus().setTextAlign("center").run()}>↔</button>
-        <button type="button" onClick={() => editor?.chain().focus().setTextAlign("right").run()}>↦</button>
+
+        <button type="button" onClick={() => editor.chain().focus().setTextAlign("left").run()}>↤</button>
+        <button type="button" onClick={() => editor.chain().focus().setTextAlign("center").run()}>↔</button>
+        <button type="button" onClick={() => editor.chain().focus().setTextAlign("right").run()}>↦</button>
+
         <button
           type="button"
           onClick={() => {
@@ -128,10 +103,11 @@ export default function EditorPost() {
         >
           Enllaç
         </button>
+
+        {/* Inserir imatge amb ImageBlock */}
         <button
           type="button"
-          onClick={() => {
-            if (!editor) return;
+          onClick={async () => {
             const input = document.createElement("input");
             input.type = "file";
             input.accept = "image/*";
@@ -139,23 +115,56 @@ export default function EditorPost() {
               const file = input.files?.[0];
               if (!file) return;
               const url = await uploadFile(file);
-              editor.chain().focus().setImage({ src: url }).run();
+              // @ts-expect-error comanda custom
+              editor.chain().focus().setImageBlock({ src: url, width: "50%", align: "center" }).run();
             };
             input.click();
           }}
         >
           Imatge
         </button>
+
+        {/* Control amplada */}
+        <select
+          onChange={(e) => {
+            editor.chain().focus().updateImageBlock({ width: e.target.value }).run();
+          }}
+          defaultValue="100%"
+        >
+          <option value="25%">25%</option>
+          <option value="50%">50%</option>
+          <option value="75%">75%</option>
+          <option value="100%">100%</option>
+        </select>
+
+        {/* Control alineació */}
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().updateImageBlock({ float: "left" }).run()}
+        >
+          Esquerra
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().updateImageBlock({ float: "none" }).run()}
+        >
+          Centre
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().updateImageBlock({ float: "right" }).run()}
+        >
+          Dreta
+        </button>
       </div>
-    ),
-    [editor, uploadFile]
-  );
+    );
+  }, [editor, uploadFile]);
 
   // ---- Submit ----
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let imageUrl = "";
-    if (imageFile) imageUrl = (await toBase64(imageFile)) as string;
+    if (imageFile) imageUrl = await uploadFile(imageFile);
 
     const token = localStorage.getItem("token");
     try {
@@ -220,13 +229,4 @@ export default function EditorPost() {
       </form>
     </div>
   );
-}
-
-function toBase64(file: File) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (err) => reject(err);
-  });
 }
