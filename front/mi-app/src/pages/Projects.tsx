@@ -1,6 +1,5 @@
-// front/mi-app/src/pages/Projects.tsx
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/useAuth";     // ✅ importem usuari
+import { useAuth } from "../context/useAuth";
 
 interface IProject {
   _id: string;
@@ -11,10 +10,11 @@ interface IProject {
   imageUrl: string;
   author: string;
   createdAt: string;
+  status: "published" | "draft";
 }
 
 export default function Projects() {
-  const { user } = useAuth();                     // ✅ usuari loguejat
+  const { user } = useAuth();
   const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,7 +22,10 @@ export default function Projects() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("http://localhost:3000/projects");
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:3000/projects", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         if (!res.ok) throw new Error("Error obtenint projectes");
         const data: IProject[] = await res.json();
         setProjects(data);
@@ -35,7 +38,6 @@ export default function Projects() {
     })();
   }, []);
 
-  // 🗑️ Funció per eliminar
   const handleDelete = async (id: string) => {
     if (!window.confirm("Segur que vols eliminar aquest projecte?")) return;
     try {
@@ -47,8 +49,7 @@ export default function Projects() {
         },
       });
       if (!res.ok) throw new Error("Error eliminant projecte");
-      // Actualitza l’estat local
-      setProjects(prev => prev.filter(p => p._id !== id));
+      setProjects((prev) => prev.filter((p) => p._id !== id));
     } catch (err) {
       console.error(err);
       alert("No s'ha pogut eliminar el projecte");
@@ -61,9 +62,20 @@ export default function Projects() {
   return (
     <div className="max-w-5xl mx-auto p-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {projects.map((p) => (
-        <div key={p._id} className="border rounded shadow-sm overflow-hidden">
+        <div key={p._id} className="border rounded shadow-sm overflow-hidden bg-white">
           {p.imageUrl && (
-            <img src={p.imageUrl} alt={p.title} className="w-full h-48 object-cover" />
+            <div className="relative">
+              <img
+                src={p.imageUrl}
+                alt={p.title}
+                className={`w-full h-48 object-cover ${p.status === "draft" ? "grayscale" : ""}`}
+              />
+              {p.status === "draft" && (
+                <span className="absolute bottom-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                  Esborrany
+                </span>
+              )}
+            </div>
           )}
           <div className="p-4">
             <span className="text-xs uppercase text-gray-500">{p.category}</span>
@@ -73,7 +85,6 @@ export default function Projects() {
               Per {p.author} — {new Date(p.createdAt).toLocaleDateString("ca-ES")}
             </p>
 
-            {/* ✅ Botó eliminar només per admin */}
             {user?.role === "admin" && (
               <button
                 onClick={() => handleDelete(p._id)}

@@ -33,7 +33,6 @@ function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
     },
   });
 
-  // --- Barra d’eines pròpia ---
   const toolbar = editor && (
     <div className="flex flex-wrap gap-2 mb-2 text-sm">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
@@ -85,10 +84,7 @@ function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
             if (!file) return;
             const form = new FormData();
             form.append("file", file);
-            const res = await fetch("http://localhost:3000/uploads", {
-              method: "POST",
-              body: form,
-            });
+            const res = await fetch("http://localhost:3000/uploads", { method: "POST", body: form });
             const data = await res.json();
             editor.chain().focus().setImageBlock({ src: data.url, width: "50%", float: "none" }).run();
           };
@@ -100,9 +96,7 @@ function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
 
       {/* Amplada */}
       <select
-        onChange={(e) => {
-          editor.chain().focus().updateImageBlock({ width: e.target.value }).run();
-        }}
+        onChange={(e) => editor.chain().focus().updateImageBlock({ width: e.target.value }).run()}
         defaultValue="100%"
       >
         <option value="25%">25%</option>
@@ -112,22 +106,21 @@ function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
       </select>
 
       {/* Alineació */}
-      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "left" }).run()}>
-        Esquerra
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "none" }).run()}>
-        Centre
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "right" }).run()}>
-        Dreta
-      </button>
+      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "left" }).run()}>Esquerra</button>
+      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "none" }).run()}>Centre</button>
+      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "right" }).run()}>Dreta</button>
     </div>
   );
 
   return (
-    <div className="bg-white rounded border p-2 mb-4">
+    <div className="bg-white rounded border p-2 mb-4 w-full">
       {toolbar}
-      {editor && <EditorContent editor={editor} className="min-h-48 prose max-w-none" />}
+      {editor && (
+        <EditorContent
+          editor={editor}
+          className="prose max-w-none w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:my-2 [&_img]:rounded [&_img]:shadow-sm clearfix"
+        />
+      )}
       <button
         type="button"
         onClick={() => onRemove(id)}
@@ -160,11 +153,9 @@ export default function EditorPost() {
   const updateBlock = (id: string, content: string) =>
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content } : b)));
 
-  // Submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const content = blocks.map((b) => b.content).join("<hr/>"); // 👉 concatenar blocs
+  // 🔹 Submit (publicar o esborrany)
+  const handleSubmit = async (status: "published" | "draft") => {
+    const content = blocks.map((b) => b.content).join("<hr/>");
     let imageUrl = "";
 
     if (imageFile) {
@@ -183,11 +174,11 @@ export default function EditorPost() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title, subtitle, category, author, content, imageUrl }),
+        body: JSON.stringify({ title, subtitle, category, author, content, imageUrl, status }),
       });
-      if (!res.ok) throw new Error("Error creant el projecte");
+      if (!res.ok) throw new Error("Error guardant el projecte");
 
-      setMessage("✅ Projecte creat correctament!");
+      setMessage(status === "published" ? "✅ Projecte publicat!" : "💾 Esborrany guardat!");
       setTitle("");
       setSubtitle("");
       setCategory("Paper");
@@ -196,7 +187,7 @@ export default function EditorPost() {
       setBlocks([]);
     } catch (err) {
       console.error(err);
-      setMessage("❌ Error creant el projecte");
+      setMessage("❌ Error guardant el projecte");
     }
   };
 
@@ -205,7 +196,7 @@ export default function EditorPost() {
       <h1 className="text-2xl font-bold mb-4">Nou Projecte</h1>
       {message && <p className="mb-4 text-green-600">{message}</p>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <input className="border p-2 w-full" placeholder="Títol" value={title} onChange={(e) => setTitle(e.target.value)} />
         <input className="border p-2 w-full" placeholder="Subtítol / Extracte" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
         <select className="border p-2 w-full" value={category} onChange={(e) => setCategory(e.target.value as "Paper" | "Digital" | "Editorial")}>
@@ -230,9 +221,22 @@ export default function EditorPost() {
           ➕ Afegir bloc
         </button>
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Publicar Projecte
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleSubmit("draft")}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            💾 Guardar esborrany
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSubmit("published")}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            🚀 Publicar Projecte
+          </button>
+        </div>
       </form>
     </div>
   );

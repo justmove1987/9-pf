@@ -1,43 +1,44 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import Project from "../models/Project.ts";
-import requireRole from "../middleware/requireRole.ts";
 
 const router = Router();
 
-/* ─────────────── Middleware: requiere token y guarda userId + userRole ─────────────── */
-function requireRoleEditorOrAdmin(req: Request, res: Response, next: NextFunction) {
+/* ─────────────── Middleware opcional ─────────────── */
+function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ message: "Token requerit" });
-  }
-
-  const [bearer, token] = authHeader.split(" ");
-  if (bearer !== "Bearer" || !token) {
-    return res.status(401).json({ message: "Format d'autorització invàlid" });
-  }
-
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
-    // Guardamos en req para usar después
-    (req as any).userId = payload.id;
-    (req as any).userRole = payload.role;
-
-    // Solo admin o editor pueden continuar
-    if (payload.role !== "admin" && payload.role !== "editor") {
-      return res.status(403).json({ message: "Només editors o admins poden crear projectes" });
+  if (authHeader) {
+    const [bearer, token] = authHeader.split(" ");
+    if (bearer === "Bearer" && token) {
+      try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
+        (req as any).userId = payload.id;
+        (req as any).userRole = payload.role;
+      } catch {
+        // si el token no és vàlid, l’ignorem → usuari serà públic
+      }
     }
-
-    next();
-  } catch {
-    return res.status(401).json({ message: "Token invàlid" });
   }
+  next();
 }
 
-/* ─────────────── Obtener todos los proyectos (público) ─────────────── */
-router.get("/", async (_req: Request, res: Response) => {
+function requireRoleEditorOrAdmin(req: Request, res: Response, next: NextFunction) {
+  const role = (req as any).userRole;
+  if (role !== "admin" && role !== "editor") {
+    return res.status(403).json({ message: "Només editors o admins tenen permís" });
+  }
+  next();
+}
+
+/* ─────────────── GET projectes ─────────────── */
+router.get("/", optionalAuth, async (req: Request, res: Response) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
+    const role = (req as any).userRole;
+    const filter = role === "admin" || role === "editor"
+      ? {}                // veuen tots
+      : { status: "published" }; // públic només publicats
+
+    const projects = await Project.find(filter).sort({ createdAt: -1 });
     res.json(projects);
   } catch (err) {
     console.error(err);
@@ -45,9 +46,9 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
-/* ─────────────── Crear un proyecto (rol editor o admin) ─────────────── */
-router.post("/", requireRoleEditorOrAdmin, async (req: Request, res: Response) => {
-  const { title, subtitle, category, content, imageUrl, author } = req.body;
+/* ─────────────── Crear projecte ─────────────── */
+router.post("/", optionalAuth, requireRoleEditorOrAdmin, async (req: Request, res: Response) => {
+  const { title, subtitle, category, content, imageUrl, author, status } = req.body;
 
   try {
     const project = new Project({
@@ -58,24 +59,34 @@ router.post("/", requireRoleEditorOrAdmin, async (req: Request, res: Response) =
       imageUrl,
       author,
       createdBy: (req as any).userId,
+      status: status || "draft",
     });
 
     await project.save();
-    res.json(project);
+    res.status(201).json(project);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error creant projecte" });
   }
 });
 
-// 🗑️ Eliminar projecte (només admin)
-router.delete("/:id", requireRoleEditorOrAdmin, async (req: Request, res: Response) => {
+/* ─────────────── Update + Delete ─────────────── */
+router.put("/:id", optionalAuth, requireRoleEditorOrAdmin, async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!project) return res.status(404).json({ message: "No trobat" });
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ message: "Error actualitzant" });
+  }
+});
+
+router.delete("/:id", optionalAuth, requireRoleEditorOrAdmin, async (req, res) => {
   try {
     await Project.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error eliminant projecte" });
+    res.status(500).json({ message: "Error eliminant" });
   }
 });
 
