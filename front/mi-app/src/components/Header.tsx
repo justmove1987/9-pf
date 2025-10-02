@@ -3,13 +3,11 @@ import { useAuth } from "../context/useAuth";
 import logo from "../assets/fondo2.png"; // ✅ importem la imatge
 
 export default function Header() {
-  const { user, setUser } = useAuth();
+  const { user, logout } = useAuth(); // 👈 usem logout del context
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
 
@@ -18,46 +16,44 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* LOGO */}
-          <div className="flex-shrink-0">
-            <Link to="/">
-              <img
-                src={logo}
-                alt="Editorial logo"
-                className="h-10 w-auto"   // ajusta la mida segons vulguis
-              />
-            </Link>
+          <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate("/")}>
+            <img
+              src={logo}
+              alt="Editorial logo"
+              className="h-10 w-auto"
+            />
           </div>
-
 
           {/* LINKS */}
           <nav className="flex space-x-6">
-            <Link to="/" className="hover:text-blue-300">
+            <button
+              onClick={() => navigate("/")}
+              className="hover:text-blue-300"
+            >
               Inici
-            </Link>
+            </button>
             <Link to="/projects" className="hover:text-blue-300">
               Projectes
             </Link>
             {user && (
-                <>
-                    <Link to="/user" className="hover:text-blue-300">
-                    Usuari
-                    </Link>
+              <>
+                <Link to="/user" className="hover:text-blue-300">
+                  Usuari
+                </Link>
 
-                    {(user.role === "editor" || user.role === "admin") && (
-                    <Link to="/editorPost" className="hover:text-blue-300">
-                        Editor de projectes
-                    </Link>
-                    )}
-
-                    {user.role === "admin" && (
-                    <Link to="/admin" className="hover:text-blue-300">
-                        Administrador
-                    </Link>
-                    )}
-                </>
+                {(user.role === "editor" || user.role === "admin") && (
+                  <Link to="/editorPost" className="hover:text-blue-300">
+                    Editor de projectes
+                  </Link>
                 )}
 
-
+                {user.role === "admin" && (
+                  <Link to="/admin" className="hover:text-blue-300">
+                    Administrador
+                  </Link>
+                )}
+              </>
+            )}
           </nav>
 
           {/* LOGIN / LOGOUT + salutació */}

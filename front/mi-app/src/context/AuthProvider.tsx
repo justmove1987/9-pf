@@ -1,6 +1,6 @@
 import {
   useState,
-  useEffect,       // ✅ importado para la persistencia
+  useEffect,
   type ReactNode,
 } from "react";
 import { AuthContext } from "./AuthContext";
@@ -9,30 +9,49 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: string; 
+  role: string;
 };
 
 export type AuthContextProps = {
   user: User | null;
   setUser: (u: User | null) => void;
+  accessToken: string | null;
+  setAccessToken: (t: string | null) => void;
+  logout: () => void;   // ✅ afegit
 };
 
 /**
- * Componente que envuelve la app y provee el contexto de autenticación
+ * Proveïdor del context d'autenticació
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Inicializa el usuario con el valor guardado en localStorage, si existe
   const [user, setUser] = useState<User | null>(
     () => JSON.parse(localStorage.getItem("user") || "null")
   );
+  const [accessToken, setAccessToken] = useState<string | null>(
+    () => localStorage.getItem("token")
+  );
 
-  // Guarda el usuario en localStorage cada vez que cambie
+  // ✅ Persistència al localStorage
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(user));
+    if (user) localStorage.setItem("user", JSON.stringify(user));
+    else localStorage.removeItem("user");
   }, [user]);
 
+  useEffect(() => {
+    if (accessToken) localStorage.setItem("token", accessToken);
+    else localStorage.removeItem("token");
+  }, [accessToken]);
+
+  // ✅ Funció logout
+  const logout = () => {
+    setUser(null);
+    setAccessToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, accessToken, setAccessToken, logout }}>
       {children}
     </AuthContext.Provider>
   );
