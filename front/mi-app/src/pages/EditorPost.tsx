@@ -1,7 +1,8 @@
 // front/mi-app/src/pages/EditorPost.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { useDropzone } from "react-dropzone";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -15,9 +16,10 @@ interface BlockProps {
   id: string;
   onRemove: (id: string) => void;
   onUpdate: (id: string, content: string) => void;
+  initialContent?: string;
 }
 
-function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
+function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ underline: false, link: false }),
@@ -27,7 +29,7 @@ function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
       Placeholder.configure({ placeholder: "Escriu el teu contingut aquí..." }),
       ImageBlock,
     ],
-    content: "<p>Escriu el teu contingut aquí...</p>",
+    content: initialContent || "<p>Escriu el teu contingut aquí...</p>",
     onUpdate({ editor }) {
       onUpdate(id, editor.getHTML());
     },
@@ -93,22 +95,6 @@ function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
       >
         Imatge
       </button>
-
-      {/* Amplada */}
-      <select
-        onChange={(e) => editor.chain().focus().updateImageBlock({ width: e.target.value }).run()}
-        defaultValue="100%"
-      >
-        <option value="25%">25%</option>
-        <option value="50%">50%</option>
-        <option value="75%">75%</option>
-        <option value="100%">100%</option>
-      </select>
-
-      {/* Alineació */}
-      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "left" }).run()}>Esquerra</button>
-      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "none" }).run()}>Centre</button>
-      <button type="button" onClick={() => editor.chain().focus().updateImageBlock({ float: "right" }).run()}>Dreta</button>
     </div>
   );
 
@@ -134,15 +120,50 @@ function EditorBlock({ id, onRemove, onUpdate }: BlockProps) {
 
 export default function EditorPost() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const projectId = searchParams.get("id"); // ✅ mode edició si existeix id
+
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [category, setCategory] = useState<"Paper" | "Digital" | "Editorial">("Paper");
   const [author, setAuthor] = useState(user?.name || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState("");
   const [message, setMessage] = useState("");
   const [blocks, setBlocks] = useState<{ id: string; content: string }[]>([]);
 
-  // Portada
+  // Carregar projecte si hi ha ID
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`http://localhost:3000/projects/${projectId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setTitle(data.title);
+        setSubtitle(data.subtitle || "");
+        setCategory(data.category || "Paper");
+        setAuthor(data.author || user?.name || "");
+        setImageUrl(data.imageUrl || "");
+        setBlocks(
+          data.content
+            ? data.content.split("<hr/>").map((c: string) => ({
+                id: crypto.randomUUID(),
+                content: c,
+              }))
+            : []
+        );
+      } catch (err) {
+        console.error("Error carregant projecte:", err);
+      }
+    })();
+  }, [projectId, user?.name]);
+
+  // Dropzone portada
   const { getRootProps, getInputProps } = useDropzone({
     accept: { "image/*": [] },
     onDrop: (accepted) => setImageFile(accepted[0]),
@@ -153,38 +174,41 @@ export default function EditorPost() {
   const updateBlock = (id: string, content: string) =>
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content } : b)));
 
-  // 🔹 Submit (publicar o esborrany)
+  // Guardar / publicar
   const handleSubmit = async (status: "published" | "draft") => {
     const content = blocks.map((b) => b.content).join("<hr/>");
-    let imageUrl = "";
+    let finalImageUrl = imageUrl;
 
     if (imageFile) {
       const form = new FormData();
       form.append("file", imageFile);
       const res = await fetch("http://localhost:3000/uploads", { method: "POST", body: form });
       const data = await res.json();
-      imageUrl = data.url;
+      finalImageUrl = data.url;
     }
 
     const token = localStorage.getItem("token");
+    const payload = { title, subtitle, category, author, content, imageUrl: finalImageUrl, status };
+
     try {
-      const res = await fetch("http://localhost:3000/projects", {
-        method: "POST",
+      const url = projectId
+        ? `http://localhost:3000/projects/${projectId}`
+        : "http://localhost:3000/projects";
+      const method = projectId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title, subtitle, category, author, content, imageUrl, status }),
+        body: JSON.stringify(payload),
       });
+
       if (!res.ok) throw new Error("Error guardant el projecte");
 
       setMessage(status === "published" ? "✅ Projecte publicat!" : "💾 Esborrany guardat!");
-      setTitle("");
-      setSubtitle("");
-      setCategory("Paper");
-      setAuthor(user?.name || "");
-      setImageFile(null);
-      setBlocks([]);
+      if (status === "published") navigate("/projects");
     } catch (err) {
       console.error(err);
       setMessage("❌ Error guardant el projecte");
@@ -193,7 +217,9 @@ export default function EditorPost() {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Nou Projecte</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {projectId ? "✏️ Editar Projecte" : "Nou Projecte"}
+      </h1>
       {message && <p className="mb-4 text-green-600">{message}</p>}
 
       <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
@@ -209,12 +235,18 @@ export default function EditorPost() {
         {/* Portada */}
         <div {...getRootProps()} className="border-dashed border-2 p-4 text-center cursor-pointer">
           <input {...getInputProps()} />
-          {imageFile ? <p>Imatge seleccionada: {imageFile.name}</p> : <p>Arrossega o fes clic per pujar imatge de portada</p>}
+          {imageFile ? (
+            <p>Imatge seleccionada: {imageFile.name}</p>
+          ) : imageUrl ? (
+            <img src={imageUrl} alt="Portada" className="w-full h-48 object-cover" />
+          ) : (
+            <p>Arrossega o fes clic per pujar imatge de portada</p>
+          )}
         </div>
 
         {/* Blocs */}
         {blocks.map((b) => (
-          <EditorBlock key={b.id} id={b.id} onRemove={removeBlock} onUpdate={updateBlock} />
+          <EditorBlock key={b.id} id={b.id} onRemove={removeBlock} onUpdate={updateBlock} initialContent={b.content} />
         ))}
 
         <button type="button" onClick={addBlock} className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
