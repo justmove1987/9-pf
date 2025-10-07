@@ -123,18 +123,38 @@ export default function EditorPost() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const projectId = searchParams.get("id"); // ✅ mode edició si existeix id
+  const projectId = searchParams.get("id"); // mode edició
 
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [category, setCategory] = useState<"Paper" | "Digital" | "Editorial">("Paper");
   const [author, setAuthor] = useState(user?.name || "");
+  const [users, setUsers] = useState<{ _id: string; name: string }[]>([]); // 👈 Llista d’usuaris
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [message, setMessage] = useState("");
   const [blocks, setBlocks] = useState<{ id: string; content: string }[]>([]);
 
-  // Carregar projecte si hi ha ID
+  // ✅ Carregar usuaris per al desplegable
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:3000/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUsers(data);
+        }
+      } catch (err) {
+        console.error("Error carregant usuaris:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  // ✅ Carregar projecte si hi ha ID
   useEffect(() => {
     if (!projectId) return;
     (async () => {
@@ -176,14 +196,14 @@ export default function EditorPost() {
 
   // Guardar / publicar
   const handleSubmit = async (status: "published" | "draft") => {
-    // Neteja els <p><br></p> buits i afegeix salts visuals reals
-const content = blocks
-  .map((b) =>
-    b.content
-      .replace(/<p><br class="ProseMirror-trailingBreak"><\/p>/g, "<br><br>")
-      .replace(/<p><br><\/p>/g, "<br><br>")
-  )
-  .join("<hr/>");
+    const content = blocks
+      .map((b) =>
+        b.content
+          .replace(/<p><br class="ProseMirror-trailingBreak"><\/p>/g, "<br><br>")
+          .replace(/<p><br><\/p>/g, "<br><br>")
+      )
+      .join("<hr/>");
+
     let finalImageUrl = imageUrl;
 
     if (imageFile) {
@@ -237,7 +257,16 @@ const content = blocks
           <option value="Digital">Digital</option>
           <option value="Editorial">Editorial</option>
         </select>
-        <input className="border p-2 w-full" placeholder="Autor" value={author} onChange={(e) => setAuthor(e.target.value)} />
+
+        {/* 👇 Desplegable d'autors */}
+        <select className="border p-2 w-full" value={author} onChange={(e) => setAuthor(e.target.value)}>
+          <option value="">Selecciona autor</option>
+          {users.map((u) => (
+            <option key={u._id} value={u.name}>
+              {u.name}
+            </option>
+          ))}
+        </select>
 
         {/* Portada */}
         <div {...getRootProps()} className="border-dashed border-2 p-4 text-center cursor-pointer">
@@ -251,7 +280,7 @@ const content = blocks
           )}
         </div>
 
-        {/* Blocs */}
+        {/* Blocs TipTap */}
         {blocks.map((b) => (
           <EditorBlock key={b.id} id={b.id} onRemove={removeBlock} onUpdate={updateBlock} initialContent={b.content} />
         ))}

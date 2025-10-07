@@ -62,7 +62,7 @@ app.post("/uploads", upload.single("file"), (req, res) => {
 ------------------------------------------------------------------- */
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
-app.use("/user", userRoutes);
+app.use("/users", userRoutes);
 app.use("/projects", projectsRoutes);
 
 app.get("/", (_req, res) => {

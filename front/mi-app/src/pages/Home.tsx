@@ -38,11 +38,78 @@ export default function Home() {
       <section className="max-w-4xl mx-auto py-16 px-6 text-center">
         <h2 className="text-3xl font-serif mb-6">Qui som</h2>
         <p className="text-lg leading-relaxed text-gray-600 font-light">
-          Som una editorial independent especialitzada en projectes visuals i literaris
-          que combinen el paper, el món digital i l’expressió artística. Treballem amb
-          autors, dissenyadors i creadors per donar veu a històries úniques, cuidant cada
-          detall del procés editorial.
+          Som una editorial independent especialitzada en projectes visuals i
+          literaris que combinen el paper, el món digital i l’expressió
+          artística. Treballem amb autors, dissenyadors i creadors per donar veu
+          a històries úniques, cuidant cada detall del procés editorial.
         </p>
+      </section>
+
+      {/* --- SECCIÓ INTERMÈDIA --- */}
+      <section className="bg-white py-20">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 px-6 items-center">
+          {/* TEXT 1 */}
+          <div>
+            <h3 className="text-sm font-semibold text-green-700 mb-2">
+              01 · Clariana
+            </h3>
+            <h2 className="text-3xl font-serif text-gray-800 mb-4">
+              Edicions Clariana
+            </h2>
+            <p className="text-lg font-medium text-green-800 mb-3">
+              Especialitzats en la creació de continguts periodístics i de
+              comunicació, tant en suport paper com digital.
+            </p>
+            <p className="text-gray-600 leading-relaxed text-sm mb-4">
+              Elaborem des d’articles i entrevistes fins a reportatges i llibres
+              temàtics, passant per la coordinació de revistes, la comunicació
+              corporativa i la divulgació cultural.
+            </p>
+            <p className="text-gray-600 text-sm">
+              Primer escoltem i contrastem, després escrivim i comuniquem.
+            </p>
+          </div>
+
+          {/* IMATGE 1 */}
+          <div>
+            <img
+              src="src/assets/edi1.jpg"
+              alt="Equip editorial Clariana"
+              className="w-full h-auto rounded-lg shadow-md object-cover"
+            />
+          </div>
+        </div>
+
+        {/* BLOC 2 */}
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 px-6 mt-20 items-center">
+          {/* IMATGE 2 */}
+          <div className="order-1 md:order-2">
+            <img
+              src="src/assets/edi2.jpg"
+              alt="Producció editorial"
+              className="w-full h-auto rounded-lg shadow-md object-cover"
+            />
+          </div>
+
+          {/* TEXT 2 */}
+          <div className="order-2 md:order-1">
+            <h3 className="text-sm font-semibold text-green-700 mb-2">
+              02 · Continguts
+            </h3>
+            <h2 className="text-3xl font-serif text-gray-800 mb-4">
+              La nostra feina
+            </h2>
+            <p className="text-lg font-medium text-green-800 mb-3">
+              Englobem la totalitat de la producció editorial.
+            </p>
+            <p className="text-gray-600 leading-relaxed text-sm mb-4">
+              Elaborem continguts per a tota mena de suports, des del minut zero
+              fins al resultat final. En paper, redactem, dissenyem i maquetem;
+              en digital, creem formats visuals per a la seva publicació
+              immediata.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* --- SECCIONS --- */}
@@ -61,8 +128,8 @@ export default function Home() {
             <div className="p-6">
               <h3 className="text-2xl font-serif mb-3">Digital</h3>
               <p className="text-gray-600 leading-relaxed text-sm">
-                Projectes interactius i audiovisuals que combinen tecnologia i narrativa,
-                adaptats als nous formats digitals.
+                Projectes interactius i audiovisuals que combinen tecnologia i
+                narrativa, adaptats als nous formats digitals.
               </p>
             </div>
           </div>
@@ -80,8 +147,8 @@ export default function Home() {
             <div className="p-6">
               <h3 className="text-2xl font-serif mb-3">Paper</h3>
               <p className="text-gray-600 leading-relaxed text-sm">
-                Publicacions impreses, llibres i revistes dissenyades amb cura tipogràfica
-                i qualitat artesanal.
+                Publicacions impreses, llibres i revistes dissenyades amb cura
+                tipogràfica i qualitat artesanal.
               </p>
             </div>
           </div>
@@ -99,8 +166,8 @@ export default function Home() {
             <div className="p-6">
               <h3 className="text-2xl font-serif mb-3">Editorial</h3>
               <p className="text-gray-600 leading-relaxed text-sm">
-                Coordinem tot el procés creatiu: des de la idea fins a l’edició final,
-                amb una mirada contemporània i crítica.
+                Coordinem tot el procés creatiu: des de la idea fins a l’edició
+                final, amb una mirada contemporània i crítica.
               </p>
             </div>
           </div>

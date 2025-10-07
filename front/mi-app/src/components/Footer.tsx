@@ -10,14 +10,7 @@ export default function Footer() {
             <p>✉️ info@editorial.cat</p>
           </div>
 
-          <div className="md:text-right">
-            <h3 className="text-2xl font-serif mb-3">Segueix-nos</h3>
-            <div className="flex md:justify-end gap-4 text-xl">
-              <a href="#" className="hover:text-gray-200">📘</a>
-              <a href="#" className="hover:text-gray-200">📸</a>
-              <a href="#" className="hover:text-gray-200">🐦</a>
-            </div>
-          </div>
+        
         </div>
 
         <p className="text-center text-sm mt-8 text-white/80">

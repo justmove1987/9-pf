@@ -233,12 +233,12 @@ export default function Projects() {
             )}
 
             <div className="p-4 flex flex-col h-full">
-              <span className="text-xs uppercase text-gray-500">
+              <span className="text-xs uppercase text-gray-500 ">
                 {p.category}
               </span>
-              <h2 className="text-xl font-bold mt-1">{p.title}</h2>
+              <h2 className="text-xl font-bold mt-1 font-serif">{p.title}</h2>
               {p.subtitle && (
-                <p className="text-gray-700 text-sm mt-1 font-serif">
+                <p className="text-green-700 text-sm mt-1 ">
                   {p.subtitle}
                 </p>
               )}

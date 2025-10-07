@@ -6,12 +6,11 @@ import User from "../models/User.ts";
 
 const router = Router();
 
-/** Middleware per validar el token JWT i afegir userId a req */
+/** Middleware per validar el token JWT i afegir userId i role a req */
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ message: "Token requerit" });
 
-  // authHeader és "Bearer xxx"
   const parts = auth.split(" ");
   if (parts.length !== 2) {
     return res.status(401).json({ message: "Format de token invàlid" });
@@ -23,11 +22,28 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const payload = jwt.verify(token, secret) as any;
     (req as any).userId = payload.id;
+    (req as any).userRole = payload.role;
     next();
   } catch {
     return res.status(401).json({ message: "Token invàlid" });
   }
 }
+
+/** ✅ Nova ruta: obtenir tots els usuaris (només editors o admins) */
+router.get("/", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const role = (req as any).userRole;
+    if (role !== "admin" && role !== "editor") {
+      return res.status(403).json({ message: "Només editors o admins poden veure usuaris" });
+    }
+
+    const users = await User.find({}, "_id name role email").sort({ name: 1 });
+    res.json(users);
+  } catch (err) {
+    console.error("Error obtenint usuaris:", err);
+    res.status(500).json({ message: "Error obtenint usuaris" });
+  }
+});
 
 /** Actualitzar dades de l'usuari loguejat */
 router.put("/me", requireAuth, async (req: Request, res: Response) => {
