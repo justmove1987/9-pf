@@ -38,7 +38,7 @@ localStorage.setItem("user", JSON.stringify(data.user));
         })
       );
 
-      window.location.href = "/home";
+      window.location.href = "/";
     } catch (err) {
       console.error(err);
       alert("Error de inicio de sesión");
