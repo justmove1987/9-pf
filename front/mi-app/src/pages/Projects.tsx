@@ -1,114 +1,31 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { useNavigate, useSearchParams } from "react-router-dom"; // ✅ afegim useSearchParams
-
-interface IProject {
-  _id: string;
-  title: string;
-  subtitle: string;
-  category: string;
-  content: string;
-  imageUrl: string;
-  author: string;
-  createdAt: string;
-  status: "published" | "draft";
-}
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useProjects } from "../hooks/useProjects"; // 🧩 nou hook
 
 export default function Projects() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // ✅ llegim query params
+  const [searchParams] = useSearchParams();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
-  const [projects, setProjects] = useState<IProject[]>([]);
-  const [filtered, setFiltered] = useState<IProject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
-
-  // 🔍 filtres
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [author, setAuthor] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-
-  // ✅ Si ve de la Home amb ?category=Digital
-  useEffect(() => {
-    const catFromUrl = searchParams.get("category");
-    if (catFromUrl) setCategory(catFromUrl);
-  }, [searchParams]);
-
-  // 🔹 Carregar projectes
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:3000/projects", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!res.ok) throw new Error("Error obtenint projectes");
-        const data: IProject[] = await res.json();
-        setProjects(data);
-        setFiltered(data);
-      } catch (e) {
-        console.error(e);
-        setError("No s'han pogut carregar els projectes");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  // 🔸 Aplicar filtres locals
-  useEffect(() => {
-    let results = [...projects];
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      results = results.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.subtitle?.toLowerCase().includes(q)
-      );
-    }
-
-    if (category) results = results.filter((p) => p.category === category);
-    if (author) results = results.filter((p) => p.author === author);
-
-    if (dateFrom || dateTo) {
-      const from = dateFrom ? new Date(dateFrom) : new Date("1900-01-01");
-      const to = dateTo ? new Date(dateTo) : new Date("9999-12-31");
-
-      results = results.filter((p) => {
-        const created = new Date(p.createdAt);
-        return created >= from && created <= to;
-      });
-    }
-
-    setFiltered(results);
-  }, [search, category, author, dateFrom, dateTo, projects]);
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Segur que vols eliminar aquest projecte?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3000/projects/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error eliminant projecte");
-      setProjects((prev) => prev.filter((p) => p._id !== id));
-    } catch (err) {
-      console.error(err);
-      alert("No s'ha pogut eliminar el projecte");
-    }
-  };
-
-  if (loading) return <p className="p-4">Carregant projectes…</p>;
-  if (error) return <p className="p-4 text-red-500">{error}</p>;
+  // 🧩 useProjects encapsula càrrega i filtres
+  const {
+    filtered,
+    filters,
+    setFilters,
+    loading,
+    error,
+    deleteProject,
+    projects,
+  } = useProjects(searchParams.get("category") || "");
 
   const uniqueAuthors = Array.from(new Set(projects.map((p) => p.author)));
   const categories = ["Paper", "Digital", "Editorial"];
+
+  if (loading) return <p className="p-4">Carregant projectes…</p>;
+  if (error) return <p className="p-4 text-red-500">{error}</p>;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -123,15 +40,15 @@ export default function Projects() {
           <input
             type="text"
             placeholder="Cerca per títol o subtítol..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             className="border p-2 rounded w-full"
           />
 
           {/* Categoria */}
           <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            value={filters.category}
+            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
             className="border p-2 rounded w-full"
           >
             <option value="">Totes les categories</option>
@@ -144,8 +61,8 @@ export default function Projects() {
 
           {/* Autor */}
           <select
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
+            value={filters.author}
+            onChange={(e) => setFilters({ ...filters, author: e.target.value })}
             className="border p-2 rounded w-full"
           >
             <option value="">Tots els autors</option>
@@ -163,8 +80,10 @@ export default function Projects() {
             </label>
             <input
               type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
+              value={filters.dateFrom}
+              onChange={(e) =>
+                setFilters({ ...filters, dateFrom: e.target.value })
+              }
               className="border p-2 rounded w-full"
             />
           </div>
@@ -176,8 +95,10 @@ export default function Projects() {
             </label>
             <input
               type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
+              value={filters.dateTo}
+              onChange={(e) =>
+                setFilters({ ...filters, dateTo: e.target.value })
+              }
               className="border p-2 rounded w-full"
             />
           </div>
@@ -186,13 +107,15 @@ export default function Projects() {
         {/* Botó per netejar filtres */}
         <div className="text-right mt-3">
           <button
-            onClick={() => {
-              setSearch("");
-              setCategory("");
-              setAuthor("");
-              setDateFrom("");
-              setDateTo("");
-            }}
+            onClick={() =>
+              setFilters({
+                search: "",
+                category: "",
+                author: "",
+                dateFrom: "",
+                dateTo: "",
+              })
+            }
             className="text-sm text-blue-600 hover:underline"
           >
             Netejar filtres
@@ -238,9 +161,7 @@ export default function Projects() {
               </span>
               <h2 className="text-xl font-bold mt-1 font-serif">{p.title}</h2>
               {p.subtitle && (
-                <p className="text-green-700 text-sm mt-1 ">
-                  {p.subtitle}
-                </p>
+                <p className="text-green-700 text-sm mt-1 ">{p.subtitle}</p>
               )}
               <p className="text-xs text-gray-500 mt-2">
                 Per {p.author} —{" "}
@@ -267,7 +188,7 @@ export default function Projects() {
 
                     {user?.role === "admin" && (
                       <button
-                        onClick={() => handleDelete(p._id)}
+                        onClick={() => deleteProject(p._id)}
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
                       >
                         Esborrar

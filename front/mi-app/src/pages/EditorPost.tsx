@@ -1,4 +1,3 @@
-// front/mi-app/src/pages/EditorPost.tsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { useDropzone } from "react-dropzone";
@@ -11,6 +10,8 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ImageBlock } from "../extensions/ImageBlock";
+import { useUsers } from "../hooks/useUsers"; // 🧩 nou hook
+import { uploadFile } from "../hooks/useFileUpload"; // 🧩 nou hook
 
 interface BlockProps {
   id: string;
@@ -84,11 +85,8 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
           input.onchange = async () => {
             const file = input.files?.[0];
             if (!file) return;
-            const form = new FormData();
-            form.append("file", file);
-            const res = await fetch("http://localhost:3000/uploads", { method: "POST", body: form });
-            const data = await res.json();
-            editor.chain().focus().setImageBlock({ src: data.url, width: "50%", float: "none" }).run();
+            const url = await uploadFile(file);
+            editor.chain().focus().setImageBlock({ src: url, width: "50%", float: "none" }).run();
           };
           input.click();
         }}
@@ -120,39 +118,20 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
 
 export default function EditorPost() {
   const { user } = useAuth();
+  const { users, loading: usersLoading } = useUsers(); // 🧩 useUsers
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const projectId = searchParams.get("id"); // mode edició
+  const projectId = searchParams.get("id");
 
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [category, setCategory] = useState<"Paper" | "Digital" | "Editorial">("Paper");
   const [author, setAuthor] = useState(user?.name || "");
-  const [users, setUsers] = useState<{ _id: string; name: string }[]>([]); // 👈 Llista d’usuaris
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [message, setMessage] = useState("");
   const [blocks, setBlocks] = useState<{ id: string; content: string }[]>([]);
-
-  // ✅ Carregar usuaris per al desplegable
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:3000/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUsers(data);
-        }
-      } catch (err) {
-        console.error("Error carregant usuaris:", err);
-      }
-    };
-    fetchUsers();
-  }, []);
 
   // ✅ Carregar projecte si hi ha ID
   useEffect(() => {
@@ -207,11 +186,7 @@ export default function EditorPost() {
     let finalImageUrl = imageUrl;
 
     if (imageFile) {
-      const form = new FormData();
-      form.append("file", imageFile);
-      const res = await fetch("http://localhost:3000/uploads", { method: "POST", body: form });
-      const data = await res.json();
-      finalImageUrl = data.url;
+      finalImageUrl = await uploadFile(imageFile); // 🧩 substituït per hook
     }
 
     const token = localStorage.getItem("token");
@@ -259,7 +234,12 @@ export default function EditorPost() {
         </select>
 
         {/* 👇 Desplegable d'autors */}
-        <select className="border p-2 w-full" value={author} onChange={(e) => setAuthor(e.target.value)}>
+        <select
+          className="border p-2 w-full"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+          disabled={usersLoading}
+        >
           <option value="">Selecciona autor</option>
           {users.map((u) => (
             <option key={u._id} value={u.name}>
