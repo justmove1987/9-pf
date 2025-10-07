@@ -31,12 +31,13 @@ export default function Projects() {
       </div>
     );
 
-  if (error) return <p className="p-4 text-red-500">{error}</p>;
+  if (error) return <p className="p-4 text-red-500 dark:text-red-400">{error}</p>;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-6 bg-gray-100 p-4 rounded-lg shadow-sm">
-        <h2 className="text-lg font-semibold mb-3 text-gray-700">
+    <div className="max-w-6xl mx-auto p-6 transition-colors duration-300 text-gray-800 dark:text-gray-100">
+      {/* 🔍 FILTRES */}
+      <div className="mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm transition-colors duration-300">
+        <h2 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">
           Filtra projectes
         </h2>
 
@@ -46,13 +47,13 @@ export default function Projects() {
             placeholder="Cerca per títol o subtítol..."
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="border p-2 rounded w-full"
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 rounded w-full text-gray-900 dark:text-gray-100"
           />
 
           <select
             value={filters.category}
             onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-            className="border p-2 rounded w-full"
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 rounded w-full text-gray-900 dark:text-gray-100"
           >
             <option value="">Totes les categories</option>
             {categories.map((c) => (
@@ -65,7 +66,7 @@ export default function Projects() {
           <select
             value={filters.author}
             onChange={(e) => setFilters({ ...filters, author: e.target.value })}
-            className="border p-2 rounded w-full"
+            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 rounded w-full text-gray-900 dark:text-gray-100"
           >
             <option value="">Tots els autors</option>
             {uniqueAuthors.map((a) => (
@@ -76,30 +77,26 @@ export default function Projects() {
           </select>
 
           <div className="relative">
-            <label className="absolute text-xs text-gray-500 bg-gray-100 px-1 left-2 -top-2">
+            <label className="absolute text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 left-2 -top-2">
               Des de
             </label>
             <input
               type="date"
               value={filters.dateFrom}
-              onChange={(e) =>
-                setFilters({ ...filters, dateFrom: e.target.value })
-              }
-              className="border p-2 rounded w-full"
+              onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+              className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 rounded w-full text-gray-900 dark:text-gray-100"
             />
           </div>
 
           <div className="relative">
-            <label className="absolute text-xs text-gray-500 bg-gray-100 px-1 left-2 -top-2">
+            <label className="absolute text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 left-2 -top-2">
               Fins a
             </label>
             <input
               type="date"
               value={filters.dateTo}
-              onChange={(e) =>
-                setFilters({ ...filters, dateTo: e.target.value })
-              }
-              className="border p-2 rounded w-full"
+              onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+              className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 rounded w-full text-gray-900 dark:text-gray-100"
             />
           </div>
         </div>
@@ -115,25 +112,26 @@ export default function Projects() {
                 dateTo: "",
               })
             }
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
           >
             Netejar filtres
           </button>
         </div>
 
         {searchParams.get("category") && (
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
             Mostrant projectes de la categoria{" "}
             <strong>{searchParams.get("category")}</strong>
           </p>
         )}
       </div>
 
+      {/* 🗂️ LLISTA PROJECTES */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((p) => (
           <div
             key={p._id}
-            className="border rounded shadow-sm overflow-hidden bg-white hover:shadow-md transition"
+            className="border border-gray-300 dark:border-gray-700 rounded shadow-sm overflow-hidden bg-white dark:bg-gray-900 hover:shadow-md transition"
           >
             {p.imageUrl && (
               <div className="relative">
@@ -153,16 +151,17 @@ export default function Projects() {
             )}
 
             <div className="p-4 flex flex-col h-full">
-              <span className="text-xs uppercase text-gray-500 ">
+              <span className="text-xs uppercase text-gray-500 dark:text-gray-400">
                 {p.category}
               </span>
               <h2 className="text-xl font-bold mt-1 font-serif">{p.title}</h2>
               {p.subtitle && (
-                <p className="text-green-700 text-sm mt-1 ">{p.subtitle}</p>
+                <p className="text-green-700 dark:text-green-400 text-sm mt-1">
+                  {p.subtitle}
+                </p>
               )}
-              <p className="text-xs text-gray-500 mt-2">
-                Per {p.author} —{" "}
-                {new Date(p.createdAt).toLocaleDateString("ca-ES")}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Per {p.author} — {new Date(p.createdAt).toLocaleDateString("ca-ES")}
               </p>
 
               <div className="flex flex-wrap gap-2 pt-3">
@@ -198,13 +197,14 @@ export default function Projects() {
         ))}
       </div>
 
+      {/* 🪟 MODAL PROJECTE */}
       {selectedProject && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => setSelectedProject(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-3xl w-full overflow-hidden animate-fadeIn"
+            className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-xl max-w-3xl w-full overflow-hidden animate-fadeIn"
             onClick={(e) => e.stopPropagation()}
           >
             {selectedProject.imageUrl && (
@@ -216,35 +216,28 @@ export default function Projects() {
             )}
 
             <div className="p-6 overflow-y-auto max-h-[80vh]">
-              <h2 className="text-2xl font-bold text-gray-800 mb-1">
-                {selectedProject.title}
-              </h2>
+              <h2 className="text-2xl font-bold mb-1">{selectedProject.title}</h2>
               {selectedProject.subtitle && (
-                <p className="text-gray-600 mb-3 font-serif">
+                <p className="text-gray-600 dark:text-gray-400 mb-3 font-serif">
                   {selectedProject.subtitle}
                 </p>
               )}
 
-              <div className="text-sm text-gray-500 mb-2">
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 <span className="uppercase">{selectedProject.category}</span> •{" "}
-                {new Date(selectedProject.createdAt).toLocaleDateString(
-                  "ca-ES"
-                )}{" "}
-                • Per {selectedProject.author}
+                {new Date(selectedProject.createdAt).toLocaleDateString("ca-ES")} •{" "}
+                Per {selectedProject.author}
               </div>
 
               <div
-                className="prose max-w-none mt-4 prose-p:mb-4 prose-p:leading-relaxed"
+                className="prose dark:prose-invert max-w-none mt-4 prose-p:mb-4 prose-p:leading-relaxed"
                 dangerouslySetInnerHTML={{
                   __html: selectedProject.content
                     .replace(
                       /<p><br class="ProseMirror-trailingBreak"><\/p>/g,
                       "<p class='empty-line'>&nbsp;</p>"
                     )
-                    .replace(
-                      /<p><br><\/p>/g,
-                      "<p class='empty-line'>&nbsp;</p>"
-                    ),
+                    .replace(/<p><br><\/p>/g, "<p class='empty-line'>&nbsp;</p>"),
                 }}
               />
 

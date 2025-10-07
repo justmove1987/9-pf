@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { Link } from "react-router-dom";
 import { fetchWithValidation } from "../utils/fetchWithValidation";
@@ -11,6 +11,14 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 💬 Esborra l’error després de 3 s
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,22 +47,38 @@ export default function LoginForm() {
 
       window.location.href = "/";
     } catch (err) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Error d'inici de sessió");
+      if (err instanceof Error) setError(`❌ ${err.message}`);
+      else setError("❌ Error d'inici de sessió");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 max-w-sm mx-auto">
-      <h2 className="text-xl font-semibold text-center mb-2">Iniciar sessió</h2>
-      {error && <p className="text-red-500 text-center">{error}</p>}
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 p-6 max-w-sm mx-auto text-gray-800 dark:text-gray-100 transition-colors duration-300"
+    >
+      <h2 className="text-2xl font-semibold text-center mb-2">
+        Iniciar sessió
+      </h2>
+
+      {error && (
+        <p
+          className={`text-center text-sm ${
+            error.includes("❌")
+              ? "text-red-600 dark:text-red-400"
+              : "text-green-600 dark:text-green-400"
+          }`}
+        >
+          {error}
+        </p>
+      )}
 
       <div>
         <label
           htmlFor="login-email"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Correu electrònic
         </label>
@@ -64,7 +88,7 @@ export default function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
-          className="border p-2 w-full rounded"
+          className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           required
         />
       </div>
@@ -72,7 +96,7 @@ export default function LoginForm() {
       <div>
         <label
           htmlFor="login-password"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Contrasenya
         </label>
@@ -82,24 +106,24 @@ export default function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Contrasenya"
-          className="border p-2 w-full rounded"
+          className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           required
         />
       </div>
 
-      <div className="flex items-center justify-between mt-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
         <button
           type="submit"
           disabled={loading}
-          className={`flex items-center justify-center gap-2 ${
+          className={`flex items-center justify-center gap-2 w-full sm:w-auto text-white px-4 py-2 rounded transition ${
             loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          } text-white px-4 py-2 rounded transition w-full sm:w-auto`}
+              ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          }`}
         >
           {loading ? (
             <>
-              <Spinner /> <span>Iniciant sessió...</span>
+              <Spinner color="text-white" /> <span>Iniciant sessió...</span>
             </>
           ) : (
             "Iniciar sessió"
@@ -108,7 +132,7 @@ export default function LoginForm() {
 
         <Link
           to="/register"
-          className="ml-4 text-blue-600 underline hover:text-blue-800 text-sm"
+          className="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300 text-sm"
         >
           Crear compte
         </Link>

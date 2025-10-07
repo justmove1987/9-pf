@@ -10,8 +10,8 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ImageBlock } from "../extensions/ImageBlock";
-import { useUsers } from "../hooks/useUsers"; // 🧩 nou hook
-import { uploadFile } from "../hooks/useFileUpload"; // 🧩 nou hook
+import { useUsers } from "../hooks/useUsers";
+import { uploadFile } from "../hooks/useFileUpload";
 
 interface BlockProps {
   id: string;
@@ -20,6 +20,9 @@ interface BlockProps {
   initialContent?: string;
 }
 
+/* -----------------------------------------------------------
+   🧩 Subcomponent: Bloc TipTap amb barra d'eines
+----------------------------------------------------------- */
 function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
   const editor = useEditor({
     extensions: [
@@ -37,12 +40,12 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
   });
 
   const toolbar = editor && (
-    <div className="flex flex-wrap gap-2 mb-2 text-sm">
-      <button type="button" onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()}>I</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()}>U</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()}>• Llista</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. Llista</button>
+    <div className="flex flex-wrap gap-2 mb-2 text-sm text-gray-700 dark:text-gray-200">
+      <button onClick={() => editor.chain().focus().toggleBold().run()} className="hover:text-blue-600">B</button>
+      <button onClick={() => editor.chain().focus().toggleItalic().run()} className="hover:text-blue-600">I</button>
+      <button onClick={() => editor.chain().focus().toggleUnderline().run()} className="hover:text-blue-600">U</button>
+      <button onClick={() => editor.chain().focus().toggleBulletList().run()}>• Llista</button>
+      <button onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. Llista</button>
 
       <select
         onChange={(e) => {
@@ -51,6 +54,7 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
           else editor.chain().focus().toggleHeading({ level: v as 1 | 2 | 3 }).run();
         }}
         defaultValue={0}
+        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1"
       >
         <option value={0}>Paràgraf</option>
         <option value={1}>H1</option>
@@ -58,12 +62,11 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
         <option value={3}>H3</option>
       </select>
 
-      <button type="button" onClick={() => editor.chain().focus().setTextAlign("left").run()}>↤</button>
-      <button type="button" onClick={() => editor.chain().focus().setTextAlign("center").run()}>↔</button>
-      <button type="button" onClick={() => editor.chain().focus().setTextAlign("right").run()}>↦</button>
+      <button onClick={() => editor.chain().focus().setTextAlign("left").run()}>↤</button>
+      <button onClick={() => editor.chain().focus().setTextAlign("center").run()}>↔</button>
+      <button onClick={() => editor.chain().focus().setTextAlign("right").run()}>↦</button>
 
       <button
-        type="button"
         onClick={() => {
           if (editor.isActive("link")) editor.chain().focus().unsetLink().run();
           else {
@@ -72,12 +75,11 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
           }
         }}
       >
-        Enllaç
+        🔗 Enllaç
       </button>
 
       {/* Inserir imatge */}
       <button
-        type="button"
         onClick={() => {
           const input = document.createElement("input");
           input.type = "file";
@@ -91,24 +93,24 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
           input.click();
         }}
       >
-        Imatge
+        🖼️ Imatge
       </button>
     </div>
   );
 
   return (
-    <div className="bg-white rounded border p-2 mb-4 w-full">
+    <div className="bg-white dark:bg-gray-900 rounded border border-gray-300 dark:border-gray-700 p-3 mb-4 transition-colors">
       {toolbar}
       {editor && (
         <EditorContent
           editor={editor}
-          className="prose max-w-none w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:my-2 [&_img]:rounded [&_img]:shadow-sm clearfix"
+          className="prose dark:prose-invert max-w-none w-full [&_img]:max-w-full [&_img]:rounded [&_img]:shadow-sm"
         />
       )}
       <button
         type="button"
         onClick={() => onRemove(id)}
-        className="mt-2 text-red-600 hover:underline"
+        className="mt-2 text-red-600 dark:text-red-400 hover:underline text-sm"
       >
         🗑️ Esborrar bloc
       </button>
@@ -116,12 +118,14 @@ function EditorBlock({ id, onRemove, onUpdate, initialContent }: BlockProps) {
   );
 }
 
+/* -----------------------------------------------------------
+   ✏️ Component principal EditorPost
+----------------------------------------------------------- */
 export default function EditorPost() {
   const { user } = useAuth();
-  const { users, loading: usersLoading } = useUsers(); // 🧩 useUsers
+  const { users, loading: usersLoading } = useUsers();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
   const projectId = searchParams.get("id");
 
   const [title, setTitle] = useState("");
@@ -184,10 +188,7 @@ export default function EditorPost() {
       .join("<hr/>");
 
     let finalImageUrl = imageUrl;
-
-    if (imageFile) {
-      finalImageUrl = await uploadFile(imageFile); // 🧩 substituït per hook
-    }
+    if (imageFile) finalImageUrl = await uploadFile(imageFile);
 
     const token = localStorage.getItem("token");
     const payload = { title, subtitle, category, author, content, imageUrl: finalImageUrl, status };
@@ -218,16 +219,32 @@ export default function EditorPost() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
       <h1 className="text-2xl font-bold mb-4">
         {projectId ? "✏️ Editar Projecte" : "Nou Projecte"}
       </h1>
-      {message && <p className="mb-4 text-green-600">{message}</p>}
+      {message && <p className="mb-4 text-green-600 dark:text-green-400">{message}</p>}
 
       <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-        <input className="border p-2 w-full" placeholder="Títol" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input className="border p-2 w-full" placeholder="Subtítol / Extracte" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-        <select className="border p-2 w-full" value={category} onChange={(e) => setCategory(e.target.value as "Paper" | "Digital" | "Editorial")}>
+        <input
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 w-full rounded"
+          placeholder="Títol"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 w-full rounded"
+          placeholder="Subtítol / Extracte"
+          value={subtitle}
+          onChange={(e) => setSubtitle(e.target.value)}
+        />
+        <select
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 w-full rounded"
+          value={category}
+          onChange={(e) =>
+            setCategory(e.target.value as "Paper" | "Digital" | "Editorial")
+          }
+        >
           <option value="Paper">Paper</option>
           <option value="Digital">Digital</option>
           <option value="Editorial">Editorial</option>
@@ -235,7 +252,7 @@ export default function EditorPost() {
 
         {/* 👇 Desplegable d'autors */}
         <select
-          className="border p-2 w-full"
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 w-full rounded"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
           disabled={usersLoading}
@@ -248,24 +265,39 @@ export default function EditorPost() {
           ))}
         </select>
 
-        {/* Portada */}
-        <div {...getRootProps()} className="border-dashed border-2 p-4 text-center cursor-pointer">
+        {/* 🖼️ Portada */}
+        <div
+          {...getRootProps()}
+          className="border-dashed border-2 border-gray-300 dark:border-gray-700 p-4 text-center cursor-pointer rounded bg-gray-50 dark:bg-gray-800 transition-colors"
+        >
           <input {...getInputProps()} />
           {imageFile ? (
             <p>Imatge seleccionada: {imageFile.name}</p>
           ) : imageUrl ? (
-            <img src={imageUrl} alt="Portada" className="w-full h-48 object-cover" />
+            <img src={imageUrl} alt="Portada" className="w-full h-48 object-cover rounded" />
           ) : (
-            <p>Arrossega o fes clic per pujar imatge de portada</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Arrossega o fes clic per pujar imatge de portada
+            </p>
           )}
         </div>
 
-        {/* Blocs TipTap */}
+        {/* 🧱 Blocs TipTap */}
         {blocks.map((b) => (
-          <EditorBlock key={b.id} id={b.id} onRemove={removeBlock} onUpdate={updateBlock} initialContent={b.content} />
+          <EditorBlock
+            key={b.id}
+            id={b.id}
+            onRemove={removeBlock}
+            onUpdate={updateBlock}
+            initialContent={b.content}
+          />
         ))}
 
-        <button type="button" onClick={addBlock} className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+        <button
+          type="button"
+          onClick={addBlock}
+          className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+        >
           ➕ Afegir bloc
         </button>
 
@@ -273,14 +305,14 @@ export default function EditorPost() {
           <button
             type="button"
             onClick={() => handleSubmit("draft")}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition"
           >
             💾 Guardar esborrany
           </button>
           <button
             type="button"
             onClick={() => handleSubmit("published")}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
           >
             🚀 Publicar Projecte
           </button>

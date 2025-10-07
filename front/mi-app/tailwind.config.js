@@ -15,4 +15,11 @@ export default {
   plugins: [],
 };
 
-
+module.exports = {
+  darkMode: "class", // 👈 activa el mode fosc amb la classe 'dark'
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};

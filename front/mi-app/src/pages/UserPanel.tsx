@@ -16,7 +16,7 @@ export default function UserPanel() {
   const [isModified, setIsModified] = useState(false);
   const [passwordError, setPasswordError] = useState("");
 
-  // 🔍 Detecta canvis en relació a l’usuari actual
+  // 🔍 Detecta canvis
   useEffect(() => {
     const changed =
       name !== user?.name ||
@@ -26,7 +26,7 @@ export default function UserPanel() {
     setIsModified(changed);
   }, [name, email, currentPassword, newPassword, user]);
 
-  // 🧩 Validació en temps real de la nova contrasenya
+  // 🧩 Validació contrasenya
   useEffect(() => {
     if (newPassword && newPassword.length < 6) {
       setPasswordError("La contrasenya ha de tenir almenys 6 caràcters.");
@@ -34,6 +34,14 @@ export default function UserPanel() {
       setPasswordError("");
     }
   }, [newPassword]);
+
+  // 💬 Esborra missatge automàticament
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +88,7 @@ export default function UserPanel() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
+    <div className="max-w-md mx-auto p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
       <h1 className="text-2xl font-bold mb-4 text-center">
         Panell d'usuari
       </h1>
@@ -88,7 +96,9 @@ export default function UserPanel() {
       {message && (
         <p
           className={`mb-4 text-center text-sm ${
-            message.includes("✅") ? "text-green-600" : "text-red-600"
+            message.includes("✅")
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
           }`}
         >
           {message}
@@ -97,7 +107,7 @@ export default function UserPanel() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Nom
           </label>
           <input
@@ -105,12 +115,12 @@ export default function UserPanel() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nom"
-            className="border rounded p-2 w-full"
+            className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Correu electrònic
           </label>
           <input
@@ -118,15 +128,15 @@ export default function UserPanel() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Correu"
-            className="border rounded p-2 w-full"
+            className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
             autoComplete="username"
           />
         </div>
 
-        <hr className="my-4" />
+        <hr className="my-4 border-gray-300 dark:border-gray-700" />
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Contrasenya actual
           </label>
           <input
@@ -135,12 +145,12 @@ export default function UserPanel() {
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Només necessària si vols canviar-la"
-            className="border rounded p-2 w-full"
+            className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Nova contrasenya
           </label>
           <input
@@ -149,7 +159,7 @@ export default function UserPanel() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Nova contrasenya"
-            className="border rounded p-2 w-full"
+            className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           />
           {passwordError && (
             <p className="text-xs text-red-500 mt-1">{passwordError}</p>
@@ -159,15 +169,16 @@ export default function UserPanel() {
         <button
           type="submit"
           disabled={loading || !isModified || !!passwordError}
-          className={`flex items-center justify-center gap-2 w-full ${
-            loading || !isModified || !!passwordError
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          } text-white px-4 py-2 rounded transition`}
+          className={`flex items-center justify-center gap-2 w-full text-white px-4 py-2 rounded transition
+            ${
+              loading || !isModified || !!passwordError
+                ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            }`}
         >
           {loading ? (
             <>
-              <Spinner /> <span>Desant canvis...</span>
+              <Spinner color="text-white" /> <span>Desant canvis...</span>
             </>
           ) : (
             "Desar canvis"

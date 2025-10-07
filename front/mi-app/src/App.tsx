@@ -24,8 +24,8 @@ export default function App() {
   return (
     <BrowserRouter>
       {/* Contenedor flex para que el footer quede pegado al fondo */}
-      <div className="flex flex-col min-h-screen">
-        <Header />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+          <Header />
 
         {/* main crece para ocupar el espacio entre header y footer */}
         <main className="flex-1">

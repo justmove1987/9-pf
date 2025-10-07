@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { fetchWithValidation } from "../utils/fetchWithValidation";
 import Spinner from "../components/Spinner";
@@ -12,12 +12,22 @@ export default function RegisterForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 💬 Esborra error automàticament
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
+      if (password.length < 6) throw new Error("La contrasenya ha de tenir almenys 6 caràcters.");
+
       const data = await fetchWithValidation<RegisterResponse>(
         "http://localhost:3000/auth/register",
         {
@@ -40,31 +50,45 @@ export default function RegisterForm() {
 
       window.location.href = "/";
     } catch (err) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Error en el registre");
+      if (err instanceof Error) setError(`❌ ${err.message}`);
+      else setError("❌ Error en el registre");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleRegister} className="space-y-4 p-4 max-w-md mx-auto">
-      <h2 className="text-xl font-semibold text-center mb-2">Registre</h2>
-      {error && <p className="text-red-500 text-center">{error}</p>}
+    <form
+      onSubmit={handleRegister}
+      className="space-y-4 p-6 max-w-md mx-auto text-gray-800 dark:text-gray-100 transition-colors duration-300"
+    >
+      <h2 className="text-2xl font-semibold text-center mb-2">Crear compte</h2>
+
+      {error && (
+        <p
+          className={`text-center text-sm ${
+            error.includes("❌")
+              ? "text-red-600 dark:text-red-400"
+              : "text-green-600 dark:text-green-400"
+          }`}
+        >
+          {error}
+        </p>
+      )}
 
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Nom
         </label>
         <input
           id="name"
-          className="border p-2 w-full rounded"
+          className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nom"
+          placeholder="Nom complet"
           autoComplete="name"
           required
         />
@@ -73,14 +97,14 @@ export default function RegisterForm() {
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Correu electrònic
         </label>
         <input
           id="email"
           type="email"
-          className="border p-2 w-full rounded"
+          className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Correu"
@@ -92,17 +116,17 @@ export default function RegisterForm() {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Contrasenya
         </label>
         <input
           id="password"
           type="password"
-          className="border p-2 w-full rounded"
+          className="border dark:border-gray-700 dark:bg-gray-900 rounded p-2 w-full focus:ring-2 focus:ring-green-500 outline-none transition"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contrasenya"
+          placeholder="Mínim 6 caràcters"
           autoComplete="new-password"
           required
         />
@@ -111,15 +135,15 @@ export default function RegisterForm() {
       <button
         type="submit"
         disabled={loading}
-        className={`flex items-center justify-center gap-2 w-full ${
+        className={`flex items-center justify-center gap-2 w-full text-white px-4 py-2 rounded transition ${
           loading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
-        } text-white px-4 py-2 rounded transition`}
+            ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+        }`}
       >
         {loading ? (
           <>
-            <Spinner /> <span>Creant compte...</span>
+            <Spinner color="text-white" /> <span>Creant compte...</span>
           </>
         ) : (
           "Registrar-se"
