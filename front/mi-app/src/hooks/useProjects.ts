@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
-
-export interface IProject {
-  _id: string;
-  title: string;
-  subtitle: string;
-  category: string;
-  content: string;
-  imageUrl: string;
-  author: string;
-  createdAt: string;
-  status: "published" | "draft";
-}
+import type { Project } from "../types/api"; // 👈 reutilitzem el tipus oficial
 
 export function useProjects(initialCategory = "") {
-  const [projects, setProjects] = useState<IProject[]>([]);
-  const [filtered, setFiltered] = useState<IProject[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filtered, setFiltered] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({
@@ -25,6 +14,7 @@ export function useProjects(initialCategory = "") {
     dateTo: "",
   });
 
+  // Carrega inicial de projectes
   useEffect(() => {
     (async () => {
       try {
@@ -32,11 +22,13 @@ export function useProjects(initialCategory = "") {
         const res = await fetch("http://localhost:3000/projects", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        const data = await res.json();
+
+        if (!res.ok) throw new Error(`Error: ${res.status}`);
+
+        const data: Project[] = await res.json();
         setProjects(data);
         setFiltered(data);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
+      } catch {
         setError("Error carregant projectes");
       } finally {
         setLoading(false);
@@ -44,6 +36,7 @@ export function useProjects(initialCategory = "") {
     })();
   }, []);
 
+  // Filtratge reactiu
   useEffect(() => {
     let results = [...projects];
     const { search, category, author, dateFrom, dateTo } = filters;
@@ -56,6 +49,7 @@ export function useProjects(initialCategory = "") {
           p.subtitle?.toLowerCase().includes(q)
       );
     }
+
     if (category) results = results.filter((p) => p.category === category);
     if (author) results = results.filter((p) => p.author === author);
 
@@ -71,13 +65,21 @@ export function useProjects(initialCategory = "") {
     setFiltered(results);
   }, [filters, projects]);
 
+  // Eliminar projecte
   const deleteProject = async (id: string) => {
-    const token = localStorage.getItem("token");
-    await fetch(`http://localhost:3000/projects/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setProjects((prev) => prev.filter((p) => p._id !== id));
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:3000/projects/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Error eliminant projecte");
+
+      setProjects((prev) => prev.filter((p) => p._id !== id));
+    } catch {
+      setError("No s'ha pogut eliminar el projecte");
+    }
   };
 
   return { projects, filtered, filters, setFilters, loading, error, deleteProject };

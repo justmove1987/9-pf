@@ -12,12 +12,19 @@ export function useFetch<T>(url: string, options?: RequestInit) {
       try {
         setLoading(true);
         const res = await fetch(url, options);
-        if (!res.ok) throw new Error(`Error: ${res.status}`);
-        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(`Error de connexió: ${res.status}`);
+        }
+
+        const json: T = await res.json();
         if (isMounted) setData(json);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        if (isMounted) setError(err.message);
+      } catch (err) {
+        if (isMounted && err instanceof Error) {
+          setError(err.message);
+        } else if (isMounted) {
+          setError("Error desconegut");
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -27,7 +34,7 @@ export function useFetch<T>(url: string, options?: RequestInit) {
     return () => {
       isMounted = false;
     };
-  }, [url, options]); // 👈 dependències literals i correctes
+  }, [url, options]);
 
   return { data, loading, error };
 }
