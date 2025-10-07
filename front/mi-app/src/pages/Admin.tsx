@@ -8,17 +8,19 @@ interface User {
   name: string;
   email: string;
   role: "admin" | "editor" | "subscriber";
+  active: boolean;
 }
 
 export default function Admin() {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
   const token = localStorage.getItem("token");
 
-  // 🔄 Carregar usuaris
+  /* ----------------------- Carregar usuaris ----------------------- */
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -38,16 +40,46 @@ export default function Admin() {
     loadUsers();
   }, [token]);
 
-  // 🧹 Esborrar missatge automàticament
+  /* ----------------------- Autoesborrar missatge ----------------------- */
   useEffect(() => {
     if (message) {
-      const timer = setTimeout(() => setMessage(null), 3000);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => setMessage(null), 3000);
+      return () => clearTimeout(t);
     }
   }, [message]);
 
-  // 🗑️ Eliminar usuari
+  /* ----------------------- Accions admin ----------------------- */
+  const handleToggleActive = async (id: string, current: boolean) => {
+    if (id === user?.id) return; // 👈 no permet bloquejar-se
+
+    try {
+      const updated = await fetchWithValidation<User>(
+        `http://localhost:3000/admin/users/${id}/toggle`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ active: !current }),
+        }
+      );
+
+      setUsers((prev) =>
+        prev.map((u) => (u._id === id ? { ...u, active: updated.active } : u))
+      );
+      setMessage(
+        updated.active
+          ? "✅ Usuari reactivat correctament"
+          : "⛔ Usuari bloquejat"
+      );
+    } catch (err) {
+      if (err instanceof Error) setMessage(`❌ ${err.message}`);
+    }
+  };
+
   const handleDelete = async (id: string) => {
+    if (id === user?.id) return; // 👈 no permet eliminar-se
     if (!confirm("Vols eliminar aquest usuari?")) return;
 
     try {
@@ -65,7 +97,6 @@ export default function Admin() {
     }
   };
 
-  // ✏️ Canviar rol
   const handleRoleChange = async (id: string, newRole: User["role"]) => {
     try {
       const updated = await fetchWithValidation<User>(
@@ -88,7 +119,14 @@ export default function Admin() {
     }
   };
 
-  // 🌀 Loading
+  /* ----------------------- Filtratge ----------------------- */
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* ----------------------- Render ----------------------- */
   if (loading)
     return (
       <div className="flex justify-center items-center h-64">
@@ -96,16 +134,15 @@ export default function Admin() {
       </div>
     );
 
-  // 🧭 Render
   return (
-    <div className="max-w-4xl mx-auto p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
-      <h1 className="text-2xl font-bold mb-4 text-center">
-        Benvingut/da, {user?.name} (Admin)
+    <div className="max-w-5xl mx-auto p-6 text-gray-800 dark:text-gray-100">
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        Panell d’administració
       </h1>
 
       {message && (
         <p
-          className={`mb-4 text-center text-sm transition ${
+          className={`mb-4 text-center text-sm ${
             message.startsWith("✅")
               ? "text-green-600 dark:text-green-400"
               : "text-red-600 dark:text-red-400"
@@ -115,60 +152,82 @@ export default function Admin() {
         </p>
       )}
 
-      {users.length === 0 ? (
-        <p className="text-center text-gray-600 dark:text-gray-300">
-          No hi ha usuaris registrats.
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300 dark:border-gray-700 text-left bg-white dark:bg-gray-800 rounded shadow-sm transition-colors duration-300">
-            <thead className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-              <tr>
-                <th className="p-2 border-b dark:border-gray-600">Nom</th>
-                <th className="p-2 border-b dark:border-gray-600">Email</th>
-                <th className="p-2 border-b dark:border-gray-600">Rol</th>
-                <th className="p-2 border-b text-center dark:border-gray-600">
-                  Accions
-                </th>
+      <div className="mb-4 flex justify-between items-center">
+        <input
+          type="text"
+          placeholder="Cerca per nom o correu..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border p-2 rounded w-full md:w-1/2 dark:bg-gray-800 dark:border-gray-700"
+        />
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-gray-300 dark:border-gray-700 text-left bg-white dark:bg-gray-800 rounded shadow-sm">
+          <thead className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+            <tr>
+              <th className="p-2 border-b dark:border-gray-600">Nom</th>
+              <th className="p-2 border-b dark:border-gray-600">Email</th>
+              <th className="p-2 border-b dark:border-gray-600">Rol</th>
+              <th className="p-2 border-b dark:border-gray-600 text-center">
+                Estat
+              </th>
+              <th className="p-2 border-b dark:border-gray-600 text-center">
+                Accions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((u) => (
+              <tr
+                key={u._id}
+                className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                  !u.active ? "opacity-60" : ""
+                }`}
+              >
+                <td className="p-2 border-b dark:border-gray-700">{u.name}</td>
+                <td className="p-2 border-b dark:border-gray-700">{u.email}</td>
+                <td className="p-2 border-b dark:border-gray-700">
+                  <select
+                    value={u.role}
+                    onChange={(e) =>
+                      handleRoleChange(u._id, e.target.value as User["role"])
+                    }
+                    className="border dark:border-gray-600 rounded p-1 bg-white dark:bg-gray-900 text-sm"
+                  >
+                    <option value="subscriber">Subscriptor</option>
+                    <option value="editor">Editor</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                </td>
+                <td className="p-2 border-b dark:border-gray-700 text-center">
+                  {u.active ? "✅ Actiu" : "⛔ Bloc."}
+                </td>
+                <td className="p-2 border-b dark:border-gray-700 text-center flex gap-2 justify-center">
+                  <button
+                    disabled={u._id === user?.id}
+                    onClick={() => handleToggleActive(u._id, u.active)}
+                    className={`${
+                      u.active
+                        ? "bg-yellow-500 hover:bg-yellow-600"
+                        : "bg-green-600 hover:bg-green-700"
+                    } text-white text-sm px-3 py-1 rounded transition disabled:bg-gray-400`}
+                  >
+                    {u.active ? "Bloquejar" : "Activar"}
+                  </button>
+                  <button
+                    disabled={u._id === user?.id}
+                    onClick={() => handleDelete(u._id)}
+                    className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded transition disabled:bg-gray-400"
+                  >
+                    Eliminar
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr
-                  key={u._id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                >
-                  <td className="p-2 border-b dark:border-gray-700">{u.name}</td>
-                  <td className="p-2 border-b dark:border-gray-700">
-                    {u.email}
-                  </td>
-                  <td className="p-2 border-b dark:border-gray-700">
-                    <select
-                      value={u.role}
-                      onChange={(e) =>
-                        handleRoleChange(u._id, e.target.value as User["role"])
-                      }
-                      className="border dark:border-gray-600 rounded p-1 bg-white dark:bg-gray-900 text-sm"
-                    >
-                      <option value="subscriber">Subscriptor</option>
-                      <option value="editor">Editor</option>
-                      <option value="admin">Administrador</option>
-                    </select>
-                  </td>
-                  <td className="p-2 border-b text-center dark:border-gray-700">
-                    <button
-                      onClick={() => handleDelete(u._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded transition"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
