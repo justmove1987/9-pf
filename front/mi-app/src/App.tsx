@@ -4,12 +4,11 @@ import Home from "./pages/Home";
 import Projects from "./pages/Projects";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
-import LoginForm from "./components/LoginForm";
-import Register from "./pages/Register";
 import Header from "./components/Header";
 import UserPanel from "./pages/UserPanel";
 import EditorPost from "./pages/EditorPost";
 import Footer from "./components/Footer";
+import AuthPage from "./pages/AuthPage";
 
 type PrivateProps = { children: React.ReactNode; requiredRole?: string };
 
@@ -32,8 +31,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/projects" element={<Projects />} />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Navigate to="/auth" />} />
+            <Route path="/register" element={<Navigate to="/auth" />} />
+            <Route path="/auth" element={<AuthPage />} />
 
             <Route
               path="/editorPost"
