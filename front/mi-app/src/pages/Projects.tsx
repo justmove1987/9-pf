@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom"; // ✅ afegim useSearchParams
 
 interface IProject {
   _id: string;
@@ -17,6 +17,8 @@ interface IProject {
 export default function Projects() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // ✅ llegim query params
+
   const [projects, setProjects] = useState<IProject[]>([]);
   const [filtered, setFiltered] = useState<IProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +32,13 @@ export default function Projects() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  // ✅ Si ve de la Home amb ?category=Digital
+  useEffect(() => {
+    const catFromUrl = searchParams.get("category");
+    if (catFromUrl) setCategory(catFromUrl);
+  }, [searchParams]);
+
+  // 🔹 Carregar projectes
   useEffect(() => {
     (async () => {
       try {
@@ -108,6 +117,7 @@ export default function Projects() {
         <h2 className="text-lg font-semibold mb-3 text-gray-700">
           Filtra projectes
         </h2>
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {/* Buscador */}
           <input
@@ -188,6 +198,14 @@ export default function Projects() {
             Netejar filtres
           </button>
         </div>
+
+        {/* Indicador de filtre aplicat des de la Home */}
+        {searchParams.get("category") && (
+          <p className="text-sm text-gray-600 mt-2">
+            Mostrant projectes de la categoria{" "}
+            <strong>{searchParams.get("category")}</strong>
+          </p>
+        )}
       </div>
 
       {/* LLISTA DE PROJECTES */}
@@ -220,7 +238,9 @@ export default function Projects() {
               </span>
               <h2 className="text-xl font-bold mt-1">{p.title}</h2>
               {p.subtitle && (
-                <p className="text-gray-700 text-sm mt-1 font-serif">{p.subtitle}</p>
+                <p className="text-gray-700 text-sm mt-1 font-serif">
+                  {p.subtitle}
+                </p>
               )}
               <p className="text-xs text-gray-500 mt-2">
                 Per {p.author} —{" "}
@@ -302,8 +322,14 @@ export default function Projects() {
                 className="prose max-w-none mt-4 prose-p:mb-4 prose-p:leading-relaxed"
                 dangerouslySetInnerHTML={{
                   __html: selectedProject.content
-                    .replace(/<p><br class="ProseMirror-trailingBreak"><\/p>/g, "<p class='empty-line'>&nbsp;</p>")
-                    .replace(/<p><br><\/p>/g, "<p class='empty-line'>&nbsp;</p>")
+                    .replace(
+                      /<p><br class="ProseMirror-trailingBreak"><\/p>/g,
+                      "<p class='empty-line'>&nbsp;</p>"
+                    )
+                    .replace(
+                      /<p><br><\/p>/g,
+                      "<p class='empty-line'>&nbsp;</p>"
+                    ),
                 }}
               />
 
