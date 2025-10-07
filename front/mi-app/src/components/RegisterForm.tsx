@@ -24,7 +24,6 @@ export default function RegisterForm() {
 
       const data = await res.json();
 
-      // ✅ guarda usuari i token en context i localStorage
       const newUser = {
         id: data.user.id,
         name: data.user.name,
@@ -35,8 +34,7 @@ export default function RegisterForm() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(newUser));
 
-      // Redirigir on convingui
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message);
@@ -48,36 +46,56 @@ export default function RegisterForm() {
       <h2 className="text-xl font-bold">Registre</h2>
       {error && <p className="text-red-500">{error}</p>}
 
-      <input
-        className="border p-2 w-full"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Nom"
-        autoComplete="name"
-        required
-      />
-      <input
-        type="email"
-        className="border p-2 w-full"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Correu"
-        autoComplete="username"
-        required
-      />
-      <input
-        type="password"
-        className="border p-2 w-full"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Contrasenya"
-        autoComplete="new-password"
-        required
-      />
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          Nom
+        </label>
+        <input
+          id="name"
+          className="border p-2 w-full rounded"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nom"
+          autoComplete="name"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          Correu electrònic
+        </label>
+        <input
+          id="email"
+          type="email"
+          className="border p-2 w-full rounded"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Correu"
+          autoComplete="username"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          Contrasenya
+        </label>
+        <input
+          id="password"
+          type="password"
+          className="border p-2 w-full rounded"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Contrasenya"
+          autoComplete="new-password"
+          required
+        />
+      </div>
 
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
       >
         Registrar-se
       </button>

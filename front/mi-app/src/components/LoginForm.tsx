@@ -11,71 +11,74 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       const res = await fetch("http://localhost:3000/auth/login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email, password }),
-});
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-if (!res.ok) throw new Error("Error iniciant sessió");
+      if (!res.ok) throw new Error("Error iniciant sessió");
 
-const data = await res.json();
-localStorage.setItem("token", data.token);
-localStorage.setItem("user", JSON.stringify(data.user));
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       setUser({
         id: data.user.id,
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
       });
-      localStorage.setItem("token", data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          role: data.user.role,
-        })
-      );
 
       window.location.href = "/";
     } catch (err) {
       console.error(err);
-      alert("Error de inicio de sesión");
+      alert("Error d'inici de sessió");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 max-w-sm mx-auto">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        className="border p-2 w-full"
-        required
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Contraseña"
-        className="border p-2 w-full"
-        required
-      />
+      <div>
+        <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
+          Correu electrònic
+        </label>
+        <input
+          id="login-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="border p-2 w-full rounded"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
+          Contrasenya
+        </label>
+        <input
+          id="login-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Contrasenya"
+          className="border p-2 w-full rounded"
+          required
+        />
+      </div>
 
       <div className="flex items-center justify-between mt-4">
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Iniciar sesión
+          Iniciar sessió
         </button>
 
-        {/* ➕ Botó/enllaç per registrar-se */}
         <Link
           to="/register"
-          className="ml-4 text-blue-600 underline hover:text-blue-800"
+          className="ml-4 text-blue-600 underline hover:text-blue-800 text-sm"
         >
           Crear compte
         </Link>

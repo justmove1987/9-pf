@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProjects } from "../hooks/useProjects"; // 🧩 nou hook
+import Spinner from "../components/Spinner";
 
 export default function Projects() {
   const { user } = useAuth();
@@ -24,7 +25,13 @@ export default function Projects() {
   const uniqueAuthors = Array.from(new Set(projects.map((p) => p.author)));
   const categories = ["Paper", "Digital", "Editorial"];
 
-  if (loading) return <p className="p-4">Carregant projectes…</p>;
+  if (loading) {
+  return (
+    <div className="flex justify-center items-center h-64">
+      <Spinner size="lg" color="text-green-600" />
+    </div>
+  );
+}
   if (error) return <p className="p-4 text-red-500">{error}</p>;
 
   return (
