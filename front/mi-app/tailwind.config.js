@@ -2,11 +2,17 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx,ts,tsx}"  // incluye .tsx y .ts
+    "./src/**/*.{js,ts,jsx,tsx}"
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui"],
+        serif: ["Playfair Display", "serif"],
+      },
+    },
   },
   plugins: [],
 };
+
 

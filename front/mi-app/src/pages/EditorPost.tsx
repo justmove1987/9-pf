@@ -176,7 +176,14 @@ export default function EditorPost() {
 
   // Guardar / publicar
   const handleSubmit = async (status: "published" | "draft") => {
-    const content = blocks.map((b) => b.content).join("<hr/>");
+    // Neteja els <p><br></p> buits i afegeix salts visuals reals
+const content = blocks
+  .map((b) =>
+    b.content
+      .replace(/<p><br class="ProseMirror-trailingBreak"><\/p>/g, "<br><br>")
+      .replace(/<p><br><\/p>/g, "<br><br>")
+  )
+  .join("<hr/>");
     let finalImageUrl = imageUrl;
 
     if (imageFile) {

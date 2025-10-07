@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  @apply font-sans text-gray-800;
+}
+
+/* Paràgrafs buits generats per TipTap */
+.empty-line {
+  display: block;
+  height: 1.5rem;  /* ajusta com vulguis */
+  line-height: 1.5rem;
+  content: "";
+}
+
+/* Millora general del text TipTap */
+.prose p {
+  margin-bottom: 1rem;
+}
+
+.prose img {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+}
