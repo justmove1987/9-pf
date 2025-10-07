@@ -20,6 +20,13 @@ export interface RegisterResponse {
   user: ApiUser;
 }
 
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "editor" | "subscriber";
+}
+
 /** Projecte retornat pel backend */
 export interface Project {
   _id: string;
