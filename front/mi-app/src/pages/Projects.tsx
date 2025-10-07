@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useProjects } from "../hooks/useProjects"; // 🧩 nou hook
+import { useProjects } from "../hooks/useProjects";
 import Spinner from "../components/Spinner";
+import type { Project } from "../types/api";
 
 export default function Projects() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  // 🧩 useProjects encapsula càrrega i filtres
   const {
     filtered,
     filters,
@@ -25,25 +24,23 @@ export default function Projects() {
   const uniqueAuthors = Array.from(new Set(projects.map((p) => p.author)));
   const categories = ["Paper", "Digital", "Editorial"];
 
-  if (loading) {
-  return (
-    <div className="flex justify-center items-center h-64">
-      <Spinner size="lg" color="text-green-600" />
-    </div>
-  );
-}
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner size="w-10 h-10" color="border-green-600" />
+      </div>
+    );
+
   if (error) return <p className="p-4 text-red-500">{error}</p>;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      {/* 🔍 FILTRES */}
       <div className="mb-6 bg-gray-100 p-4 rounded-lg shadow-sm">
         <h2 className="text-lg font-semibold mb-3 text-gray-700">
           Filtra projectes
         </h2>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Buscador */}
           <input
             type="text"
             placeholder="Cerca per títol o subtítol..."
@@ -52,7 +49,6 @@ export default function Projects() {
             className="border p-2 rounded w-full"
           />
 
-          {/* Categoria */}
           <select
             value={filters.category}
             onChange={(e) => setFilters({ ...filters, category: e.target.value })}
@@ -66,7 +62,6 @@ export default function Projects() {
             ))}
           </select>
 
-          {/* Autor */}
           <select
             value={filters.author}
             onChange={(e) => setFilters({ ...filters, author: e.target.value })}
@@ -80,7 +75,6 @@ export default function Projects() {
             ))}
           </select>
 
-          {/* Data des de */}
           <div className="relative">
             <label className="absolute text-xs text-gray-500 bg-gray-100 px-1 left-2 -top-2">
               Des de
@@ -95,7 +89,6 @@ export default function Projects() {
             />
           </div>
 
-          {/* Data fins a */}
           <div className="relative">
             <label className="absolute text-xs text-gray-500 bg-gray-100 px-1 left-2 -top-2">
               Fins a
@@ -111,7 +104,6 @@ export default function Projects() {
           </div>
         </div>
 
-        {/* Botó per netejar filtres */}
         <div className="text-right mt-3">
           <button
             onClick={() =>
@@ -129,7 +121,6 @@ export default function Projects() {
           </button>
         </div>
 
-        {/* Indicador de filtre aplicat des de la Home */}
         {searchParams.get("category") && (
           <p className="text-sm text-gray-600 mt-2">
             Mostrant projectes de la categoria{" "}
@@ -138,7 +129,6 @@ export default function Projects() {
         )}
       </div>
 
-      {/* LLISTA DE PROJECTES */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((p) => (
           <div
@@ -150,7 +140,7 @@ export default function Projects() {
                 <img
                   src={p.imageUrl}
                   alt={p.title}
-                  className={`w-full h-80 object-cover ${
+                  className={`w-full h-56 object-cover ${
                     p.status === "draft" ? "grayscale" : ""
                   }`}
                 />
@@ -175,7 +165,6 @@ export default function Projects() {
                 {new Date(p.createdAt).toLocaleDateString("ca-ES")}
               </p>
 
-              {/* BOTONS */}
               <div className="flex flex-wrap gap-2 pt-3">
                 <button
                   onClick={() => setSelectedProject(p)}
@@ -209,7 +198,6 @@ export default function Projects() {
         ))}
       </div>
 
-      {/* MODAL / POPUP */}
       {selectedProject && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -238,8 +226,7 @@ export default function Projects() {
               )}
 
               <div className="text-sm text-gray-500 mb-2">
-                <span className="uppercase">{selectedProject.category}</span>{" "}
-                •{" "}
+                <span className="uppercase">{selectedProject.category}</span> •{" "}
                 {new Date(selectedProject.createdAt).toLocaleDateString(
                   "ca-ES"
                 )}{" "}

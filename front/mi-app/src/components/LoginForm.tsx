@@ -1,24 +1,32 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { Link } from "react-router-dom";
+import { fetchWithValidation } from "../utils/fetchWithValidation";
+import Spinner from "../components/Spinner";
+import type { LoginResponse } from "../types/api";
 
 export default function LoginForm() {
   const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await fetchWithValidation<LoginResponse>(
+        "http://localhost:3000/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
-      if (!res.ok) throw new Error("Error iniciant sessió");
-
-      const data = await res.json();
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -31,15 +39,23 @@ export default function LoginForm() {
 
       window.location.href = "/";
     } catch (err) {
-      console.error(err);
-      alert("Error d'inici de sessió");
+      if (err instanceof Error) setError(err.message);
+      else setError("Error d'inici de sessió");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 max-w-sm mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-2">Iniciar sessió</h2>
+      {error && <p className="text-red-500 text-center">{error}</p>}
+
       <div>
-        <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="login-email"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Correu electrònic
         </label>
         <input
@@ -54,7 +70,10 @@ export default function LoginForm() {
       </div>
 
       <div>
-        <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="login-password"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Contrasenya
         </label>
         <input
@@ -71,9 +90,20 @@ export default function LoginForm() {
       <div className="flex items-center justify-between mt-4">
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
+          className={`flex items-center justify-center gap-2 ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          } text-white px-4 py-2 rounded transition w-full sm:w-auto`}
         >
-          Iniciar sessió
+          {loading ? (
+            <>
+              <Spinner /> <span>Iniciant sessió...</span>
+            </>
+          ) : (
+            "Iniciar sessió"
+          )}
         </button>
 
         <Link

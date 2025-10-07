@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
+import { fetchWithValidation } from "../utils/fetchWithValidation";
+import Spinner from "../components/Spinner";
+import type { RegisterResponse } from "../types/api";
 
 export default function RegisterForm() {
   const { setUser } = useAuth();
@@ -7,22 +10,22 @@ export default function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      const res = await fetch("http://localhost:3000/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      if (!res.ok) {
-        const msg = await res.json();
-        throw new Error(msg.message || "Error en el registre");
-      }
-
-      const data = await res.json();
+      const data = await fetchWithValidation<RegisterResponse>(
+        "http://localhost:3000/auth/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        }
+      );
 
       const newUser = {
         id: data.user.id,
@@ -30,24 +33,30 @@ export default function RegisterForm() {
         email: data.user.email,
         role: data.user.role,
       };
+
       setUser(newUser);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(newUser));
 
       window.location.href = "/";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Error en el registre");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleRegister} className="space-y-4 p-4 max-w-md mx-auto">
-      <h2 className="text-xl font-bold">Registre</h2>
-      {error && <p className="text-red-500">{error}</p>}
+      <h2 className="text-xl font-semibold text-center mb-2">Registre</h2>
+      {error && <p className="text-red-500 text-center">{error}</p>}
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Nom
         </label>
         <input
@@ -62,7 +71,10 @@ export default function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Correu electrònic
         </label>
         <input
@@ -78,7 +90,10 @@ export default function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Contrasenya
         </label>
         <input
@@ -95,9 +110,20 @@ export default function RegisterForm() {
 
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+        disabled={loading}
+        className={`flex items-center justify-center gap-2 w-full ${
+          loading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+        } text-white px-4 py-2 rounded transition`}
       >
-        Registrar-se
+        {loading ? (
+          <>
+            <Spinner /> <span>Creant compte...</span>
+          </>
+        ) : (
+          "Registrar-se"
+        )}
       </button>
     </form>
   );
