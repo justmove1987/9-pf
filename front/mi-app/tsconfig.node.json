@@ -13,6 +13,9 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* ✅ Afegim aquí també */
+    "types": ["node", "vitest"],
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

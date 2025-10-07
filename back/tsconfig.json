@@ -1,55 +1,64 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
+    /* ------------------------------------------------------------------
+       📁 Estructura de fitxers
+    ------------------------------------------------------------------ */
+    "rootDir": "src",
+    "outDir": "dist",
 
-  // Environment Settings
-  // See also https://aka.ms/tsconfig/module
-  
-  "module": "ESNext",
-  "target": "ES2020",
-  "moduleResolution": "node",
-  "allowSyntheticDefaultImports": true,
-  "rootDir": "src",
-  "outDir": "dist",
-  "strict": true,
-  "esModuleInterop": true,
-  "types": ["node"],
-  // For nodejs:
-  // "lib": ["esnext"],
-  // "types": ["node"],
-  // and npm install -D @types/node
+    /* ------------------------------------------------------------------
+       ⚙️ Configuració d'entorn
+    ------------------------------------------------------------------ */
+    "module": "ESNext",
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
 
-  // Other Outputs
-  "sourceMap": true,
-  "declaration": true,
-  "declarationMap": true,
+    /* ------------------------------------------------------------------
+       🧩 Tipus globals
+       👉 Afegim "jest" per evitar errors amb describe, it, expect
+    ------------------------------------------------------------------ */
+    "types": ["node", "jest"],
 
-  // Stricter Typechecking Options
-  "noUncheckedIndexedAccess": true,
-  "exactOptionalPropertyTypes": true,
+    /* ------------------------------------------------------------------
+       ⚠️ Opcions de compilació i seguretat
+    ------------------------------------------------------------------ */
+    "strict": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "moduleDetection": "force",
 
-  // Style Options
-  // "noImplicitReturns": true,
-  // "noImplicitOverride": true,
-  // "noUnusedLocals": true,
-  // "noUnusedParameters": true,
-  // "noFallthroughCasesInSwitch": true,
-  // "noPropertyAccessFromIndexSignature": true,
+    /* ------------------------------------------------------------------
+       🧭 Altres sortides i opcions
+    ------------------------------------------------------------------ */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true,
 
-  // Recommended Options
-  "jsx": "react-jsx",
-  "verbatimModuleSyntax": true,
-  "isolatedModules": true,
-  "noUncheckedSideEffectImports": true,
-  "moduleDetection": "force",
-  "skipLibCheck": true,
-   "allowImportingTsExtensions": true,
-   "noEmit": true
+    /* ------------------------------------------------------------------
+       ⚛️ Només si el projecte té React (front)
+       (pots eliminar si és només backend)
+    ------------------------------------------------------------------ */
+    "jsx": "react-jsx"
   },
+
+  /* ------------------------------------------------------------------
+     🧪 Configuració especial per ts-node (si fas servir scripts)
+  ------------------------------------------------------------------ */
   "ts-node": {
-    "ts-node": { "esm": true }
-  }
+    "esm": true
+  },
+
+  /* ------------------------------------------------------------------
+     📦 Fitxers inclosos
+  ------------------------------------------------------------------ */
+  "include": ["src/**/*", "jest.config.js"],
+  "exclude": ["node_modules", "dist"]
 }
