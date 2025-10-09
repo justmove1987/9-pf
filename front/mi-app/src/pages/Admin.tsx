@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { fetchWithValidation } from "../utils/fetchWithValidation";
 import Spinner from "../components/Spinner";
+import ConfirmModal from "../components/ConfirmModal"; // 👈 nou component reutilitzable
 
 interface User {
   _id: string;
@@ -17,6 +18,10 @@ export default function Admin() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+
+  // 🔔 estat pel modal
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const token = localStorage.getItem("token");
 
@@ -78,19 +83,25 @@ export default function Admin() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (id === user?.id) return; // 👈 no permet eliminar-se
-    if (!confirm("Vols eliminar aquest usuari?")) return;
+  const handleDeleteClick = (id: string) => {
+    if (id === user?.id) return;
+    setSelectedId(id);
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedId) return;
+    setShowConfirm(false);
 
     try {
       await fetchWithValidation<void>(
-        `http://localhost:3000/admin/users/${id}`,
+        `http://localhost:3000/admin/users/${selectedId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setUsers((prev) => prev.filter((u) => u._id !== id));
+      setUsers((prev) => prev.filter((u) => u._id !== selectedId));
       setMessage("✅ Usuari eliminat correctament");
     } catch (err) {
       if (err instanceof Error) setMessage(`❌ ${err.message}`);
@@ -135,7 +146,7 @@ export default function Admin() {
     );
 
   return (
-    <div className="max-w-5xl mx-auto p-6 text-gray-800 dark:text-gray-100">
+    <div className="max-w-5xl mx-auto p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
       <h1 className="text-2xl font-bold mb-6 text-center">
         Panell d’administració
       </h1>
@@ -217,7 +228,7 @@ export default function Admin() {
                   </button>
                   <button
                     disabled={u._id === user?.id}
-                    onClick={() => handleDelete(u._id)}
+                    onClick={() => handleDeleteClick(u._id)}
                     className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded transition disabled:bg-gray-400"
                   >
                     Eliminar
@@ -228,6 +239,14 @@ export default function Admin() {
           </tbody>
         </table>
       </div>
+
+      {/* 🧩 Modal de confirmació */}
+      <ConfirmModal
+        show={showConfirm}
+        message="Segur que vols eliminar aquest usuari?"
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
