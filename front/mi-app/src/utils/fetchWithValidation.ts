@@ -1,8 +1,26 @@
+// src/utils/fetchWithValidation.ts
+
 export async function fetchWithValidation<T>(
   url: string,
-  options?: RequestInit
+  options: RequestInit = {}
 ): Promise<T> {
-  const res = await fetch(url, options);
+  // 🧠 Detecta si és una URL relativa i afegeix la base segons entorn
+  const API_BASE =
+    import.meta.env.VITE_API_BASE ||
+    (window.location.hostname === "localhost"
+      ? "http://localhost:3000"
+      : "https://alene-supermental-bettina.ngrok-free.dev"); // 👈 posa aquí la teva URL Ngrok actual
+
+  const fullUrl = url.startsWith("http") ? url : `${API_BASE}${url}`;
+
+  // 🔒 Afegeix capçalera per saltar el warning d’Ngrok
+  const headers = {
+    "ngrok-skip-browser-warning": "true",
+    ...(options.headers || {}),
+  };
+
+  const res = await fetch(fullUrl, { ...options, headers });
+
   const text = await res.text();
 
   let data: unknown = null;

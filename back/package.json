@@ -7,7 +7,8 @@
   "module": "ESNext",
   "moduleResolution": "node",
   "scripts": {
-    "start": "ts-node --esm src/index.ts",
+     "start": "ts-node --esm src/index.ts",
+      "tunnel": "start cmd /k \"npm run start && timeout 3 && C:\\nvm4w\\nodejs\\ngrok.cmd http 3000 --config C:\\Users\\enric\\.config\\ngrok\\ngrok.yml\"",
     "test": "cross-env NODE_ENV=test jest --runInBand"
   },
   "keywords": [],
