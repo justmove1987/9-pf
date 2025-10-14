@@ -49,15 +49,17 @@ export default function Header() {
             </Link>
             {user && (
               <>
-                <Link to="/user" className="hover:text-blue-300">
-                  Usuari
-                </Link>
+                
 
                 {(user.role === "editor" || user.role === "admin") && (
                   <Link to="/editorPost" className="hover:text-blue-300">
                     Editor de projectes
                   </Link>
                 )}
+
+                <Link to="/user" className="hover:text-blue-300">
+                  Usuari
+                </Link>
 
                 {user.role === "admin" && (
                   <Link to="/admin" className="hover:text-blue-300">
