@@ -1,33 +1,20 @@
 // front/mi-app/src/types/api.ts
 
-/** Usuari retornat pel backend */
-export interface ApiUser {
+/** 🧍 Usuario base del sistema */
+export interface User {
   id: string;
   name: string;
   email: string;
   role: "admin" | "editor" | "subscriber";
 }
 
-/** Resposta del login */
-export interface LoginResponse {
+/** 🔐 Respuesta de autenticación (login / registro) */
+export interface AuthResponse {
   token: string;
-  user: ApiUser;
+  user: User;
 }
 
-/** Resposta del registre */
-export interface RegisterResponse {
-  token: string;
-  user: ApiUser;
-}
-
-export interface UserResponse {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "editor" | "subscriber";
-}
-
-/** Projecte retornat pel backend */
+/** 🗂️ Proyecto retornado por el backend */
 export interface Project {
   _id: string;
   title: string;
@@ -38,4 +25,15 @@ export interface Project {
   author: string;
   status: "draft" | "published";
   createdAt: string;
+}
+
+/** 📦 Payload para crear o editar un proyecto */
+export interface ProjectPayload {
+  title: string;
+  subtitle?: string;
+  category: string;
+  content: string;
+  imageUrl?: string;
+  author: string;
+  status: "draft" | "published";
 }
